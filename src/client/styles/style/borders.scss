@@ -1,0 +1,40 @@
+/**********
+ * BORDERS
+ **********/
+// .radio {
+// 	border: 1px solid mapGet($formControlColors, borders, radio, default);
+// }
+
+// /* States
+//  *********/
+// .sublabel {
+// 	&:hover,
+// 	&:focus,
+// 	&.active {
+// 		.radio {
+// 			border-color: mapGet($formControlColors, borders, active, default);
+// 		}
+// 	}
+// 	&:hover,
+// 	&:focus {
+// 		.radio::before {
+// 			background-color: mapGet($formControlColors, bg, active, default);
+// 		}
+//  	}
+//  	&.active {
+// 		.radio::after {
+// 			background-color: mapGet($formControlColors, bg, active, default);
+// 		}
+//  	}
+// }
+// .form-control {
+// 	&.invalid {
+// 		.radio {
+// 			border-color: mapGet($formControlColors, borders, invalid, default);
+// 			&::before,
+// 			&::after {
+// 				background-color: mapGet($formControlColors, bg, invalid, default);
+// 			}
+// 		}
+// 	}
+// }

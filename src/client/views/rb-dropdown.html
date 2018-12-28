@@ -1,3 +1,28 @@
-rb-dropdown
+<div>
+	<rb-input
+		label="${props.label}"
+		icon-kind="caret-down"
+		icon-source="solid"
+		readonly
+		subtext="${props.subtext}"
+		?disabled="${props.disabled}"
+		?right="${props.right}"
+		?inline="${props.inline}"
+		validation=${props.validation}>
+	</rb-input>
+
+	<ul class="menu">
+		${props.data.map((value, i) => html`
+			<li>
+				${props.labelKey && typeof props.data[0] === 'object'
+					? value[props.labelKey]
+					: typeof value === 'object'
+							? JSON.stringify(value)
+							: value
+				}
+			</li>
+		`)}
+	</ul>
+</div>
 
 <link rel="stylesheet" href="../styles/rb-dropdown.css">

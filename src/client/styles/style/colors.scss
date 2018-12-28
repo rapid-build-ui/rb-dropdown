@@ -1,0 +1,27 @@
+/*********
+ * COLORS
+ *********/
+.label {
+	color: mapGet($formControlColors, text, label, default);
+}
+.subtext {
+	color: mapGet($formControlColors, text, subtext, default);
+}
+.sublabel {
+	color: mapGet($formControlColors, text, sublabel, default);
+}
+
+/* States
+ *********/
+.sublabel {
+	&.active {
+		color: mapGet($formControlColors, text, sublabel, active);
+	}
+}
+.form-control {
+	&.invalid {
+		.label, .subtext, .sublabel {
+			color: mapGet($formControlColors, text, invalid, default);
+		}
+	}
+}
