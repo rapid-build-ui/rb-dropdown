@@ -1,0 +1,42 @@
+{
+  "name": "@rapid-build-ui/rb-dropdown",
+  "version": "0.0.0",
+  "main": "scripts/rb-dropdown.js",
+  "description": "Rapid Build UI Web Component: rb-dropdown",
+  "license": "MIT",
+  "engines": {
+    "node": "10.x",
+    "npm": "6.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "contributors": [
+    {
+      "name": "Judd Younce",
+      "email": "jyounce@yahoo.com",
+      "url": "https://github.com/jyounce"
+    },
+    {
+      "name": "Yevgeniy Okun",
+      "email": "yevgeniyokun@gmail.com",
+      "url": "https://github.com/yokun"
+    },
+    {
+      "name": "Alina Younce",
+      "email": "crisan_alina2003@yahoo.com",
+      "url": "https://github.com/ayounce"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rapid-build-ui/rb-dropdown"
+  },
+  "bugs": {
+    "url": "https://github.com/rapid-build-ui/rb-dropdown/issues"
+  },
+  "flat": true,
+  "dependencies": {
+    "@rapid-build-ui/rb-base": "^0.0.6"
+  }
+}
