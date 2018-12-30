@@ -1,6 +1,6 @@
-/***********
+/**************
  * RB-DROPDOWN
- ***********/
+ **************/
 import { props, html, RbBase } from '../../rb-base/scripts/rb-base.js';
 import Type from '../../rb-base/scripts/type-service.js';
 import '../../rb-input/scripts/rb-input.js';
@@ -14,8 +14,8 @@ export class RbDropdown extends RbBase() {
 			...super.props,
 			horizontal: props.boolean,
 			inline: props.boolean,
-			label: props.string, // radios label
-			labelKey: props.string, // radio label
+			label: props.string, // dropdown label
+			labelKey: props.string, // option label
 			right: props.boolean,
 			subtext: props.string,
 			disabled: props.boolean,
