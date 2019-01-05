@@ -3,7 +3,9 @@
  *******/
 :host {
 	all: initial; // reset all styles first
-	contain: layout style; // paint cuts off the label above
+	// paint cuts off the label above
+	// layout prevents popover from being over everything
+	contain: style;
 }
 
 :host {

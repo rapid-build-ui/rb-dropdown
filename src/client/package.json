@@ -38,6 +38,7 @@
   "flat": true,
   "dependencies": {
     "@rapid-build-ui/rb-base": "^0.0.6",
-    "@rapid-build-ui/rb-input": "^0.0.12"
+    "@rapid-build-ui/rb-input": "^0.0.12",
+    "@rapid-build-ui/rb-popover": "^0.0.13"
   }
 }

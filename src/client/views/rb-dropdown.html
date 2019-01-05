@@ -1,14 +1,18 @@
 <div>
 	<rb-input
+		readonly
+		icon-source="solid"
 		label="${props.label}"
 		icon-kind="caret-down"
-		icon-source="solid"
-		readonly
-		subtext="${props.subtext}"
-		?disabled="${props.disabled}"
 		?right="${props.right}"
 		?inline="${props.inline}"
-		validation=${props.validation}>
+		subtext="${props.subtext}"
+		?disabled="${props.disabled}"
+		validation="${props.validation}">
+		${state.slots.popover
+			? html`<slot name="popover"></slot>
+			`: null
+		}
 	</rb-input>
 
 	<ul class="menu">

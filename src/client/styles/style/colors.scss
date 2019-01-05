@@ -23,5 +23,8 @@
 		.label, .subtext, .sublabel {
 			color: mapGet($formControlColors, text, invalid, default);
 		}
+		::slotted([slot="popover"]) {
+			--rb-popover-default-trigger-color: mapGet($formControlColors, text, invalid, default);
+		}
 	}
 }

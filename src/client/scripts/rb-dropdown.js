@@ -1,12 +1,25 @@
 /**************
  * RB-DROPDOWN
  **************/
-import { props, html, RbBase } from '../../rb-base/scripts/rb-base.js';
-import Type from '../../rb-base/scripts/type-service.js';
+import { RbBase, props, html } from '../../rb-base/scripts/rb-base.js';
+import Type                    from '../../rb-base/scripts/public/services/type.js';
+import template                from '../views/rb-dropdown.html';
 import '../../rb-input/scripts/rb-input.js';
-import template from '../views/rb-dropdown.html';
+import '../../rb-popover/scripts/rb-popover.js';
 
 export class RbDropdown extends RbBase() {
+	/* Lifecycle
+	 ************/
+	viewReady() { // :void
+		super.viewReady && super.viewReady();
+		this.validateValue();
+		Object.assign(this.rb.elms, {
+			focusElm:    this.shadowRoot.querySelector('.sublabel'),
+			formControl: this.shadowRoot.querySelector('input')
+		});
+		this._initSlotStates(); // see rb-base: private/mixins/slot.js
+	}
+
 	/* Properties
 	 *************/
 	static get props() {
@@ -51,7 +64,7 @@ export class RbDropdown extends RbBase() {
 
 	/* Template
 	 ***********/
-	render({ props }) { // :string
+	render({ props, state }) { // :string
 		return html template;
 	}
 }
