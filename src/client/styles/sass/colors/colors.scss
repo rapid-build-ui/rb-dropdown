@@ -35,6 +35,10 @@ $formControlColors: (
 		),
 		invalid: (
 			default: mapGet($palette, redDark)
+		),
+		sublabel: (
+			active: mapGet($palette, xGreyLight),
+			hover:  mapGet($palette, xxGreyLight)
 		)
 	),
 	borders: (

@@ -1,4 +1,6 @@
-<div>
+<div class="
+	form-control
+	${state.showDropdown ? 'open' : 'closed'}"">
 	<rb-input
 		readonly
 		icon-source="solid"
@@ -11,23 +13,26 @@
 		?disabled="${props.disabled}"
 		validation="${props.validation}">
 		${state.slots.popover
-			? html`<slot name="popover"></slot>
-			`: null
+			? html`<slot name="popover"></slot>`
+			: undefined
 		}
 	</rb-input>
-
-	<ul class="menu">
-		${props.data.map((value, i) => html`
-			<li>
-				${props.labelKey && typeof props.data[0] === 'object'
-					? value[props.labelKey]
-					: typeof value === 'object'
-							? JSON.stringify(value)
-							: value
-				}
-			</li>
-		`)}
-	</ul>
+	<div class="menu">
+		<ol>
+			${props.data.map((item, i) => html`
+				<li
+					class="${JSON.stringify(props.value) === JSON.stringify(item) ? 'active' : ''}"
+					@click="${this._onclick.bind(this, item)}">
+					${props.labelKey && typeof props.data[0] === 'object'
+						? item[props.labelKey]
+						: typeof item === 'object'
+								? JSON.stringify(item)
+								: item
+					}
+				</li>
+			`)}
+		</ol>
+	</div>
 </div>
 
 <link rel="stylesheet" href="../styles/rb-dropdown.css">

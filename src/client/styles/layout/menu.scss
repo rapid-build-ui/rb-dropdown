@@ -1,0 +1,43 @@
+/*******
+ * MENU
+ *******/
+.form-control {
+	&.open   { .menu { display: block; } }
+	&.closed { .menu { display: none;  } }
+}
+.menu {
+	position: relative;
+	ol {
+		position: absolute;
+		top: 0;
+		left: -5px;
+		z-index: 5;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+		width: 180px;
+		list-style: none;
+		border-radius: 4px;
+		background: white;
+		box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),
+					0 4px 5px 0 rgba(0,0,0,.14),
+					0 1px 10px 0 rgba(0,0,0,.12);
+		li {
+			// padding: remy(14) remy(14);
+			padding: 12px 14px;
+			line-height: 20px;
+			cursor: pointer;
+			text-align: left;
+			word-wrap: break-word;
+			color: mapGet($formControlColors, text, sublabel, default);
+			&:hover {
+				background-color: mapGet($formControlColors, bg, sublabel, hover);
+			}
+			&.active {
+				color: mapGet($formControlColors, text, sublabel, active);
+				background-color: mapGet($formControlColors, bg, sublabel, active);
+			}
+
+		}
+	}
+}

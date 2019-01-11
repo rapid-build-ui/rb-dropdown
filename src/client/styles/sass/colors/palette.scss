@@ -18,5 +18,7 @@ $palette: (
 	xGreyDark:   $GREY_DARK,
 	greyDark:    lighten($GREY_DARK, 10%),
 	grey:        $GREY,
-	greyLight:   $GREY_LIGHT
+	greyLight:   $GREY_LIGHT,
+	xGreyLight:  lighten($GREY, 40%),
+	xxGreyLight: lighten($GREY, 45%)
 );
