@@ -7,6 +7,7 @@
 		name="${props.name}"
 		label="${props.label}"
 		icon-kind="caret-down"
+		placeholder="${props.placeholder}"
 		?right="${props.right}"
 		?inline="${props.inline}"
 		subtext="${props.subtext}"
@@ -19,6 +20,15 @@
 	</rb-input>
 	<div class="menu">
 		<ol>
+			${this.hasAttribute('placeholder')
+				? html`
+					<li
+						class="placeholder"
+						@click="${this._onclick.bind(this, null)}">
+						${props.placeholder}</li>
+				`
+				: null
+			}
 			${props.data.map((item, i) => html`
 				<li
 					class="${JSON.stringify(props.value) === JSON.stringify(item) ? 'active' : ''}"

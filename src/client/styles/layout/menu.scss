@@ -37,7 +37,10 @@
 				color: mapGet($formControlColors, text, sublabel, active);
 				background-color: mapGet($formControlColors, bg, sublabel, active);
 			}
-
+			&.placeholder {
+				min-height: 20px;
+				color: mapGet($formControlColors, text, placeholder, default);
+			}
 		}
 	}
 }

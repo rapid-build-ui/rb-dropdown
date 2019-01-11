@@ -49,6 +49,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			labelKey: props.string, // sublabels
 			right: props.boolean,
 			subtext: props.string,
+			placeholder: props.string,
 			data: Object.assign({}, props.array, {
 				deserialize(val) { // :array
 					if (Type.is.array(val)) return val;
@@ -130,13 +131,19 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_setInputValue(value) {
-		if (typeof value == 'object' && this.labelKey.length)
-			return this.rb.elms.rbInput.value = value[this.labelKey];
+		switch(true) {
+			case Type.is.object(value) && this.labelKey.length:
+				return this.rb.elms.rbInput.value = value[this.labelKey];
 
-		if (typeof value == 'object')
-			return this.rb.elms.rbInput.value = JSON.stringify(value);
+			case Type.is.object(value):
+				return this.rb.elms.rbInput.value = JSON.stringify(value);
 
-		this.rb.elms.rbInput.value = value;
+			case Type.is.null(value):
+				return this.rb.elms.rbInput.value = '';
+
+			default:
+				this.rb.elms.rbInput.value = value;
+		}
 	}
 
 	/* Observer
@@ -151,7 +158,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 	/* Event Handlers
 	 *****************/
 	_onclick(value, evt) { // :void
-		console.log(evt);
 		this.setValue(value);
 		this._toggleDropdown(evt);
 	}
