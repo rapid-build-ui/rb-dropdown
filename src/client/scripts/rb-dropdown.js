@@ -125,7 +125,12 @@ export class RbDropdown extends FormControl(RbBase()) {
 			this._setInputValue(value);
 			this.rb.elms.input.focus();
 			await this.validate();
-			return;
+			if (this._valid) return; // todo: add method to validation mixin
+			this.rb.elms.rbInput._eMsg = this._eMsg;
+			this.rb.elms.rbInput.setDirty({
+				blurred: true,
+				dirty: true
+			})
 		}
 
 	}
@@ -161,6 +166,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.setValue(value);
 		this._toggleDropdown(evt);
 	}
+
 	_onkeypress(value, evt) { // :void
 		const keys = ['enter','space'];
 		const key  = this.getKey(evt.code);
