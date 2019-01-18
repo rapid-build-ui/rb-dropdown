@@ -27,6 +27,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 			formControl: this.shadowRoot.querySelector('input'),
 			menu:        this.shadowRoot.querySelector('.menu'),
 			rbInput:     this.shadowRoot.querySelector('rb-input'),
+			list:        this.shadowRoot.querySelector('ol'),
+			links:       this.shadowRoot.querySelectorAll('li'),
 			// TODO: fix having to go into rb-input's shadow root
 			input:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('input'),
 			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('label'),
@@ -180,7 +182,19 @@ export class RbDropdown extends FormControl(RbBase()) {
 	_toggleDropdown(evt) { // :void
 		this.state.showDropdown = !this.state.showDropdown;
 		this.triggerUpdate();
+		this.__scrollToActive();
 	}
+
+	__scrollToActive() { // :void
+		if (!this.state.showDropdown) return;
+		setTimeout(()=>{
+			const activeLinkArr = [...this.rb.elms.links]; //converts nodeList to an array
+			const activeLink = activeLinkArr.find(link => link.classList.contains('active'));
+			if (!activeLink) return;
+			this.rb.elms.list.scrollTop = activeLink.offsetTop; // (scroll past top border)
+		})
+	}
+
 	_windowClickToggle(evt) { // :void
 		if (!this.state.showDropdown) return;
 		const path = evt.composedPath();

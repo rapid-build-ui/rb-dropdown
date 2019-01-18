@@ -1,0 +1,30 @@
+/* Normalize Scrollbar (mac | windows)
+ **********************/
+.menu {
+	ol {
+		max-height: 200px;
+		overflow-y: auto;
+		overflow-x: hidden; // needed for firefox on windows
+
+		scrollbar-width: thin; // supported by firefox
+		&::-webkit-scrollbar,
+		&::-webkit-scrollbar-thumb {
+			border-radius: 100px;
+		}
+		&::-webkit-scrollbar {
+			width:  8px;
+			height: 8px;
+			&:hover {
+				background: rgba(0, 0, 0, 0.09);
+			}
+		}
+		&::-webkit-scrollbar-thumb {
+			background: rgba(0, 0, 0, 0.5);
+			&:active {
+				background: rgba(0, 0, 0, 0.61); // darker onclick
+			}
+			&:vertical   { min-height: 10px; }
+			&:horizontal { min-width:  10px; }
+		}
+	}
+}
