@@ -1,0 +1,9 @@
+/***************
+ * POPOVER SLOT
+ ***************/
+.with-label ::slotted([slot="popover"]) {
+	position: relative;
+	top: .5px;
+	left: -1px;
+	margin-right: 3px;
+}

@@ -1,3 +1,53 @@
-rb-dropdown
+<div class="
+	form-control
+	${state.showDropdown ? 'open' : 'closed'}"">
+	<rb-input
+		readonly
+		icon-source="solid"
+		name="${props.name}"
+		label="${props.label}"
+		icon-kind="caret-down"
+		?right="${props.right}"
+		?inline="${props.inline}"
+		subtext="${props.subtext}"
+		?disabled="${props.disabled}"
+		placeholder="${props.placeholder}">
+		${state.slots.popover
+			? html`<slot name="popover"></slot>`
+			: undefined
+		}
+	</rb-input>
+	<div class="menu">
+		<ol>
+			${this.hasAttribute('placeholder')
+				? html`
+					<li
+						class="placeholder"
+						@click="${this._onclick.bind(this, null)}">
+						${props.placeholder}</li>
+				`
+				: null
+			}
+			${props.data.map((item, i) => html`
+				<li
+					class="${JSON.stringify(props.value) === JSON.stringify(item) ? 'active' : ''}"
+					@click="${this._onclick.bind(this, item)}">
+					${props.labelKey && typeof props.data[0] === 'object'
+						? item[props.labelKey]
+						: typeof item === 'object'
+							? JSON.stringify(item)
+							: item
+					}
+				</li>
+			`)}
+		</ol>
+	</div>
+	<input
+		hidden
+		type="text"
+		tabindex="-1"
+		name="${props.name}"
+		.value="${props.value}">
+</div>
 
 <link rel="stylesheet" href="../styles/rb-dropdown.css">

@@ -1,8 +1,30 @@
-/******************
+/*********************
  * RB-DROPDOWN STYLES
- ******************/
+ *********************/
 @import 'sass/functions.scss';
+@import 'sass/colors/palette.scss';
+@import 'sass/colors/colors.scss';
 
-/* The Component
- ****************/
+/* Layout
+ *********/
+@import 'layout/host.scss';
+@import 'layout/root.scss';
+@import 'layout/labels.scss';
+@import 'layout/menu.scss';
+@import 'layout/popover.scss';
+@import 'layout/subtext.scss';
+@import 'layout/options.scss';
 
+/* Style
+ ********/
+@import 'style/variables.scss';
+@import 'style/colors.scss';
+@import 'style/fonts.scss';
+
+/* Load Last!
+ *************/
+@import 'base/last.scss';
+
+/* Responsive
+ *************/
+@import 'responsive/menu.scss';

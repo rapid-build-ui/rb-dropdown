@@ -1,0 +1,12 @@
+/*****************
+ * COMPONENT ROOT
+ *****************/
+.form-control {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+
+	rb-input {
+		margin-bottom: 0;
+	}
+}
