@@ -7,11 +7,11 @@
 		name="${props.name}"
 		label="${props.label}"
 		icon-kind="caret-down"
-		placeholder="${props.placeholder}"
 		?right="${props.right}"
 		?inline="${props.inline}"
 		subtext="${props.subtext}"
-		?disabled="${props.disabled}">
+		?disabled="${props.disabled}"
+		placeholder="${props.placeholder}">
 		${state.slots.popover
 			? html`<slot name="popover"></slot>`
 			: undefined
@@ -35,19 +35,19 @@
 					${props.labelKey && typeof props.data[0] === 'object'
 						? item[props.labelKey]
 						: typeof item === 'object'
-								? JSON.stringify(item)
-								: item
+							? JSON.stringify(item)
+							: item
 					}
 				</li>
 			`)}
 		</ol>
 	</div>
 	<input
-			hidden
-			type="text"
-			tabindex="-1"
-			name="${props.name}"
-			.value="${props.value}">
+		hidden
+		type="text"
+		tabindex="-1"
+		name="${props.name}"
+		.value="${props.value}">
 </div>
 
 <link rel="stylesheet" href="../styles/rb-dropdown.css">
