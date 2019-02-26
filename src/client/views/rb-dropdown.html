@@ -11,7 +11,8 @@
 		?inline="${props.inline}"
 		subtext="${props.subtext}"
 		?disabled="${props.disabled}"
-		placeholder="${props.placeholder}">
+		placeholder="${props.placeholder}"
+		@keydown="${this._onkeydown.bind(this)}">
 		${state.slots.popover
 			? html`<slot name="popover"></slot>`
 			: undefined
@@ -22,14 +23,20 @@
 			${this.hasAttribute('placeholder')
 				? html`
 					<li
-						class="placeholder"
-						@click="${this._onclick.bind(this, null)}">
+						tabindex="-1"
+						class="
+								placeholder
+								${props.value == null ? 'active' : ''}"
+						@click="${this._onclick.bind(this, null)}"
+						@keydown="${this._onkeydown.bind(this,null)}">
 						${props.placeholder}</li>
 				`
 				: null
 			}
 			${props.data.map((item, i) => html`
 				<li
+					tabindex="-1"
+					@keydown="${this._onkeydown.bind(this,item)}"
 					class="${JSON.stringify(props.value) === JSON.stringify(item) ? 'active' : ''}"
 					@click="${this._onclick.bind(this, item)}">
 					${props.labelKey && typeof props.data[0] === 'object'
