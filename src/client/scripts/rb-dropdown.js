@@ -151,7 +151,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_setInputValue(value) {
 		switch(true) {
-			case Type.is.object(value) && this.labelKey.length:
+			case Type.is.object(value) && !!this.labelKey.length:
 				return this.rb.elms.rbInput.value = value[this.labelKey];
 
 			case Type.is.object(value):
@@ -183,7 +183,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_focusNext(evt) {
 		let focusedLi = evt.composedPath()[0];
-		console.log(focusedLi);
 		if (focusedLi.tagName == 'INPUT'){
 			focusedLi =  this.rb.elms.links[0];
 			focusedLi.focus();
