@@ -17,6 +17,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			...super.state,
 			showDropdown: false
 		};
+		this.timout = null;
 	}
 
 	viewReady() { // :void
@@ -110,7 +111,11 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	/* Helpers
 	 **********/
-	getKeyAction(evtKeyCode) { // :string | void
+	getKeyAction(evt) { // :string | void
+		const matchWordRegex = /(4[8-9]|5[0-8]|6[5-9]|[7-8][0-9]|90)/g
+		const evtKeyCode = evt.keyCode
+		const isSearching = evt.keyCode.toString().match(matchWordRegex) != null
+
 		if (!evtKeyCode) return;
 		let keyAction = {
 			alt: evtKeyCode === 18,
@@ -119,7 +124,9 @@ export class RbDropdown extends FormControl(RbBase()) {
 			space: evtKeyCode === 32,
 			tab: evtKeyCode === 9,
 			down: evtKeyCode === 40,
-			up: evtKeyCode === 38
+			up: evtKeyCode === 38,
+			search: isSearching
+
 		}
 
 		keyAction.close = keyAction.escape || keyAction.tab;
@@ -202,6 +209,70 @@ export class RbDropdown extends FormControl(RbBase()) {
 		liToSetFocus.focus();
 		this._scrollToFocused(liToSetFocus);
 	}
+
+
+	_preSearch(key) {
+		return new Promise((resolve, reject) => {
+			if (this.searchString === undefined)
+				this.searchString = '';
+
+			this.searchString += key;
+
+			if(this.timeout)
+				return resolve(false);
+
+			this.timeout = setTimeout(() => {
+				this._doSearch(this.searchString)
+				resolve(true);
+			}, 500);
+		});
+	}
+
+	_doSearch(searchString) {
+		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
+		let _data = [];
+		let indexOfMatchedItem = undefined;
+		if(!!this.labelKey) _data = this._getDataForLabelKey();
+		if(!this.labelKey && (typeof this.data[0] == 'object')) {
+			_data = this._stringifyDataObject()
+			regex = new RegExp(searchString, 'i'); //match string and ignore case
+		}
+		if(!this.labelKey && (typeof this.data[0] == 'string')) _data = this.data
+
+		const match = _data.find((item, index) =>{
+			if (regex.test(item)) return indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+		})
+		if (!match) return;
+
+		if(!this.state.showDropdown)
+			return this.setValue(this.data[indexOfMatchedItem])
+
+		let linkToFocus = this._findLinkBasedOnValue(match);
+		linkToFocus.focus();
+		this._scrollToFocused(linkToFocus);
+	}
+
+	_postSearch(clear) {
+		if(!clear) return
+		clearTimeout(this.timeout);
+		this.timeout = null;
+		this.searchString = '';
+	}
+
+	_getDataForLabelKey() {
+		const _data = [];
+		for (const item of this.data)
+			_data.push(item[this.labelKey]);
+		return _data;
+	}
+
+	_stringifyDataObject() {
+		const _data = [];
+		for (const item of this.data)
+			_data.push(JSON.stringify(item));
+		return _data;
+	}
+
 	_indexIsOutOfDataRange(index){
 		return !(index in this.data)
 	}
@@ -219,7 +290,10 @@ export class RbDropdown extends FormControl(RbBase()) {
 	_onkeydown(value, evt) { // :void
 		if (evt === undefined) evt = value; //when nothing is selected evt gets populated in value.
 		evt.preventDefault();
-		let keyAction = this.getKeyAction(evt.keyCode)
+		let keyAction = this.getKeyAction(evt)
+		if (keyAction.search) return this._preSearch(evt.key).then((clear) => {
+			this._postSearch(clear)
+		});
 		if (keyAction.down && !this.state.showDropdown) return this._selectNext(evt);
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
 		if (keyAction.up && !this.state.showDropdown) return this._selectPrevious(evt);
@@ -251,6 +325,11 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.triggerUpdate();
 	}
 
+	_findLinkBasedOnValue(value) {
+		const linkArr = [...this.rb.elms.links]; //converts nodeList to an array
+		const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
+		return matchedLink;
+	}
 
 	_scrollToActive() { // :void
 		if (!this.state.showDropdown) return;
