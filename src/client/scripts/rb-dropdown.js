@@ -199,7 +199,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const nextLi = focusedLi.nextElementSibling
 		if(!nextLi) return;
 		nextLi.focus();
-		this._scrollToFocused(nextLi);
 	}
 
 	_focusPrevious(evt) {
@@ -207,7 +206,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const liToSetFocus = focusedLi.previousElementSibling
 		if(!liToSetFocus) return;
 		liToSetFocus.focus();
-		this._scrollToFocused(liToSetFocus);
 	}
 
 
