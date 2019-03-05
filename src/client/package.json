@@ -1,6 +1,6 @@
 {
   "name": "@rapid-build-ui/rb-dropdown",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "scripts/rb-dropdown.js",
   "description": "Rapid Build UI Web Component: rb-dropdown",
   "license": "MIT",
