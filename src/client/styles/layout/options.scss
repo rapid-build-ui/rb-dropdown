@@ -7,13 +7,21 @@
 		.dropdown {
 			align-items: flex-end;
 			justify-content: flex-end;
+			margin-right: 0;
+			margin-left: 6px;
 		}
 		.sublabel {
 			flex-direction: row-reverse;
 		}
-		.dropdown {
-			margin-right: 0;
-			margin-left: 6px;
+		.menu {
+			ol {
+				right: -5px;
+				left: auto;
+				li {
+					text-align: right;
+				}
+
+			}
 		}
 		&:not(.horizontal) {
 			align-items: flex-end;

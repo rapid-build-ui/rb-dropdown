@@ -7,6 +7,7 @@
 }
 .menu {
 	position: relative;
+	width: 100%;
 	ol {
 		position: absolute;
 		top: 0;
@@ -29,7 +30,9 @@
 			cursor: pointer;
 			text-align: left;
 			word-wrap: break-word;
+			outline: none;
 			color: mapGet($formControlColors, text, sublabel, default);
+			&:focus,
 			&:hover {
 				background-color: mapGet($formControlColors, bg, sublabel, hover);
 			}
