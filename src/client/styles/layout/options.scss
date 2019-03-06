@@ -4,12 +4,6 @@
 .form-control {
 	&.right {
 		justify-content: flex-end;
-		.dropdown {
-			align-items: flex-end;
-			justify-content: flex-end;
-			margin-right: 0;
-			margin-left: 6px;
-		}
 		.sublabel {
 			flex-direction: row-reverse;
 		}

@@ -32,7 +32,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			links:       this.shadowRoot.querySelectorAll('li'),
 			// TODO: fix having to go into rb-input's shadow root
 			input:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('input'),
-			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('label'),
+			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.label'),
 			trigger:     this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.input-wrap')
 		});
 		this.rb.events.add(this.rb.elms.trigger, 'click', this._toggleDropdown);
@@ -314,6 +314,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_toggleDropdown(evt) { // :void
 		this.state.showDropdown = !this.state.showDropdown;
+		this._positionMenu()
 		this.triggerUpdate();
 		this._scrollToActive(true);
 	}
@@ -323,6 +324,12 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.triggerUpdate();
 	}
 
+	_positionMenu() {
+		if(!this.state.showDropdown) return;
+		const labelStyle = this.rb.elms.label.currentStyle || window.getComputedStyle(this.rb.elms.label);
+		const inputHeightWithOutSubtext = this.rb.elms.label.offsetHeight + this.rb.elms.trigger.offsetHeight + parseInt(labelStyle.marginBottom);
+		this.rb.elms.menu.style.top = (inputHeightWithOutSubtext - this.rb.elms.rbInput.offsetHeight) + 'px'
+	}
 	_findLinkBasedOnValue(value) {
 		const linkArr = [...this.rb.elms.links]; //converts nodeList to an array
 		const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
