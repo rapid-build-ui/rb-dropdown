@@ -3,7 +3,6 @@
 	${props.right ? 'right' : ''}
 	${state.showDropdown ? 'open' : 'closed'}">
 	<rb-input
-		readonly
 		icon-source="solid"
 		name="${props.name}"
 		label="${props.label}"
@@ -21,19 +20,19 @@
 	</rb-input>
 	<div class="menu">
 		<ol>
-			${this.hasAttribute('placeholder')
-				? html`
-					<li
-						tabindex="-1"
-						class="
-								placeholder
-								${props.value == null ? 'active' : ''}"
-						@click="${this._onclick.bind(this, null)}"
-						@keydown="${this._onkeydown.bind(this,null)}">
-						${props.placeholder}</li>
-				`
-				: null
-			}
+			${!this.hasAttribute('placeholder') ? null
+			: html`
+				<li
+					tabindex="-1"
+					class="
+						placeholder
+						${props.value == null ? 'active' : ''}
+					"
+					@click="${this._onclick.bind(this, null)}"
+					@keydown="${this._onkeydown.bind(this,null)}">
+					${props.placeholder}
+				</li>
+			`}
 			${props.data.map((item, i) => html`
 				<li
 					tabindex="-1"

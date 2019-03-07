@@ -39,6 +39,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
+		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 	}
 
@@ -156,6 +157,12 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	}
 
+	_setInputToReadonly() { // :void (to prevent using rb-input's readonly styles)
+		const { input } = this.rb.elms;
+		input.readOnly = true;
+		input.style.cursor = 'pointer';
+	}
+
 	_setInputValue(value) {
 		switch(true) {
 			case Type.is.object(value) && !!this.labelKey.length:
@@ -180,7 +187,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_selectPrevious(evt) {
 		let index = this.data.indexOf(this.value) - 1;
-		if(index < 0 && !!this.placeholder) {
+		if(index < 0 && this.hasAttribute('placeholder')) {
 			this.setValue(null)
 			return
 		}
