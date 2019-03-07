@@ -300,8 +300,9 @@ export class RbDropdown extends FormControl(RbBase()) {
 	 *****************/
 	_onkeydown(value, evt) { // :void
 		if (evt === undefined) evt = value; //when nothing is selected evt gets populated in value.
-		evt.preventDefault();
 		let keyAction = this.getKeyAction(evt)
+		if (keyAction.tab && !this.state.showDropdown) return; //do not prevent when tabbing between elements
+		evt.preventDefault();
 		if (keyAction.search) return this._preSearch(evt.key).then((clear) => {
 			this._postSearch(clear)
 		});
@@ -309,7 +310,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
 		if (keyAction.up && !this.state.showDropdown) return this._selectPrevious(evt);
 		if (keyAction.up && this.state.showDropdown) return this._focusPrevious(evt);
-		if (keyAction.escape) return this._closeDropdown();
+		if (keyAction.close) return this._closeDropdown();
 		if (keyAction.toggle) return this._ontoggle(value, evt);
 
 	}
