@@ -180,17 +180,17 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_selectNext(evt) {
 		let index = this.data.indexOf(this.value) + 1;
-		if(this._indexIsOutOfDataRange(index)) return;
+		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
 	_selectPrevious(evt) {
 		let index = this.data.indexOf(this.value) - 1;
-		if(index < 0 && this.hasAttribute('placeholder')) {
+		if (index < 0 && this.hasAttribute('placeholder')) {
 			this.setValue(null)
 			return
 		}
-		if(this._indexIsOutOfDataRange(index)) return;
+		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
@@ -203,14 +203,14 @@ export class RbDropdown extends FormControl(RbBase()) {
 		}
 
 		const nextLi = focusedLi.nextElementSibling
-		if(!nextLi) return;
+		if (!nextLi) return;
 		nextLi.focus();
 	}
 
 	_focusPrevious(evt) {
 		let focusedLi = evt.composedPath()[0];
 		const liToSetFocus = focusedLi.previousElementSibling
-		if(!liToSetFocus) return;
+		if (!liToSetFocus) return;
 		liToSetFocus.focus();
 	}
 
@@ -221,13 +221,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 			this.searchString += key;
 
-			if(this.timeout)
+			if (this.timeout)
 				return resolve(false);
 
 			this.timeout = setTimeout(() => {
 				this._doSearch(this.searchString)
 				resolve(true);
-			}, 500);
+			}, 450);
 		});
 	}
 
@@ -235,19 +235,20 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
 		let _data = [];
 		let indexOfMatchedItem = undefined;
-		if(!!this.labelKey) _data = this._getDataForLabelKey();
-		if(!this.labelKey && (typeof this.data[0] == 'object')) {
+		if (!!this.labelKey) _data = this._getDataForLabelKey();
+		if (!this.labelKey && (typeof this.data[0] == 'object')) {
 			_data = this._stringifyDataObject()
 			regex = new RegExp(searchString, 'i'); //match string and ignore case
 		}
-		if(!this.labelKey && (typeof this.data[0] == 'string')) _data = this.data
+		if (!this.labelKey && (typeof this.data[0] == 'string')) _data = this.data
 
 		const match = _data.find((item, index) =>{
-			if (regex.test(item)) return indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+			return (regex.test(item))
 		})
 		if (!match) return;
 
-		if(!this.state.showDropdown)
+		if (!this.state.showDropdown)
 			return this.setValue(this.data[indexOfMatchedItem])
 
 		let linkToFocus = this._findLinkBasedOnValue(match);
@@ -256,7 +257,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_postSearch(clear) {
-		if(!clear) return
+		if (!clear) return
 		clearTimeout(this.timeout);
 		this.timeout = null;
 		this.searchString = '';
@@ -337,7 +338,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_positionMenu() {
-		if(!this.state.showDropdown) return;
+		if (!this.state.showDropdown) return;
 		const labelStyle = this.rb.elms.label.currentStyle || window.getComputedStyle(this.rb.elms.label);
 		const inputHeightWithOutSubtext = this.rb.elms.label.offsetHeight + this.rb.elms.trigger.offsetHeight + parseInt(labelStyle.marginBottom);
 		this.rb.elms.menu.style.top = (inputHeightWithOutSubtext - this.rb.elms.rbInput.offsetHeight) + 'px'
