@@ -13,10 +13,7 @@
 		?disabled="${props.disabled}"
 		placeholder="${props.placeholder}"
 		@keydown="${this._onkeydown.bind(this)}">
-		${state.slots.popover
-			? html`<slot name="popover"></slot>`
-			: undefined
-		}
+		<slot name="popover" slot="popover"></slot>
 	</rb-input>
 	<div class="menu">
 		<ol>

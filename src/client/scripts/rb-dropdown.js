@@ -41,6 +41,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		});
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
+		this._updatePopoverSlot();
 	}
 
 	/* Properties
@@ -143,18 +144,16 @@ export class RbDropdown extends FormControl(RbBase()) {
 	async setValue(value) { // :void
 		const valueChanged = this.valueChanged(value);
 		this.rb.elms.input.focus();
-		if (valueChanged) {
-			this.value = value;
-			this._setInputValue(value);
-			await this.validate();
-			if (this._valid) return; // todo: add method to validation mixin
-			this.rb.elms.rbInput._eMsg = this._eMsg;
-			this.rb.elms.rbInput.setDirty({
-				blurred: true,
-				dirty: true
-			})
-		}
-
+		if (!valueChanged) return;
+		this.value = value;
+		this._setInputValue(value);
+		await this.validate();
+		if (this._valid) return; // todo: add method to validation mixin
+		this.rb.elms.rbInput._eMsg = this._eMsg;
+		this.rb.elms.rbInput.setDirty({
+			blurred: true,
+			dirty: true
+		})
 	}
 
 	_setInputToReadonly() { // :void (to prevent using rb-input's readonly styles)
@@ -214,7 +213,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if(!liToSetFocus) return;
 		liToSetFocus.focus();
 	}
-
 
 	_preSearch(key) {
 		return new Promise((resolve, reject) => {
@@ -281,6 +279,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 	_indexIsOutOfDataRange(index){
 		return !(index in this.data)
 	}
+
+	_updatePopoverSlot() {
+		if (this.state.slots.popover) return;
+		this.rb.elms.rbInput.state.slots.popover = false;
+		this.rb.elms.rbInput.triggerUpdate();
+	}
+
 	/* Observer
 	 ***********/
 	updating(prevProps) { // :void
@@ -337,6 +342,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const inputHeightWithOutSubtext = this.rb.elms.label.offsetHeight + this.rb.elms.trigger.offsetHeight + parseInt(labelStyle.marginBottom);
 		this.rb.elms.menu.style.top = (inputHeightWithOutSubtext - this.rb.elms.rbInput.offsetHeight) + 'px'
 	}
+
 	_findLinkBasedOnValue(value) {
 		const linkArr = [...this.rb.elms.links]; //converts nodeList to an array
 		const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
@@ -359,6 +365,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			this.rb.elms.list.scrollTop = focusedLi.offsetTop; // (scroll past top border)
 		})
 	}
+
 	_windowClickToggle(evt) { // :void
 		if (!this.state.showDropdown) return;
 		const path = evt.composedPath();
