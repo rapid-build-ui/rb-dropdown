@@ -36,6 +36,8 @@ common:
 		cacheBust: false
 		html:
 			templateCache: false
+			options:
+				collapseBooleanAttributes: true
 		css:
 			fileName:
 				'rb-dropdown.css'
