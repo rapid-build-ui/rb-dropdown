@@ -39,7 +39,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
-		this.setValue(this.props.value, true);
+		if (this.props.value != undefined) this.setValue(this.props.value, true);
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 		this._updatePopoverSlot();
