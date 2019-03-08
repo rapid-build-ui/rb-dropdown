@@ -39,7 +39,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
-		if (this.props.value != undefined) this.setValue(this.props.value, true);
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 		this._updatePopoverSlot();
@@ -144,7 +143,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	async setValue(value, oninit = false) { // :void
 		const valueChanged = this.valueChanged(value);
-		this.rb.elms.input.focus();
+		if (!oninit) this.rb.elms.input.focus();
 		if (!valueChanged && !oninit) return;
 		this.value = value;
 		this._setInputValue(value);
@@ -166,7 +165,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		input.style.textOverflow = 'ellipsis';
 	}
 
-	_setInputValue(value) {
+	_setInputValue(value) { // :void
 		switch(true) {
 			case Type.is.object(value) && !!this.labelKey.length:
 				return this.rb.elms.rbInput.value = value[this.labelKey];
@@ -179,6 +178,22 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 			default:
 				this.rb.elms.rbInput.value = value;
+		}
+	}
+
+	_getInitialValue(value) { // :string
+		switch(true) {
+			case Type.is.object(value) && !!this.labelKey.length:
+				return value[this.labelKey];
+
+			case Type.is.object(value):
+				return JSON.stringify(value);
+
+			case Type.is.string(value):
+				return value;
+
+			default:
+				return '';
 		}
 	}
 

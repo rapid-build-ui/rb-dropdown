@@ -7,6 +7,7 @@
 		name="${props.name}"
 		label="${props.label}"
 		icon-kind="caret-down"
+		value="${!!props.value ? this._getInitialValue(props.value) : ''}"
 		?right="${props.right}"
 		?inline="${props.inline}"
 		subtext="${props.subtext}"
