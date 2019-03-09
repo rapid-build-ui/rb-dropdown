@@ -24,8 +24,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 		super.viewReady && super.viewReady();
 		this.validateValue();
 		Object.assign(this.rb.elms, {
-			focusElm:    this.shadowRoot.querySelector('.sublabel'),
-			formControl: this.shadowRoot.querySelector('input'),
+			focusElm:    this.shadowRoot.querySelector('rb-input').rb.elms.focusElm,
+			formControl: this.shadowRoot.querySelector('rb-input').rb.elms.formControl,
 			menu:        this.shadowRoot.querySelector('.menu'),
 			rbInput:     this.shadowRoot.querySelector('rb-input'),
 			list:        this.shadowRoot.querySelector('ol'),
@@ -35,6 +35,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.label'),
 			trigger:     this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.input-wrap')
 		});
+		this.rb.elms.rbInput.showErrorMessage = true;
 		this.rb.events.add(this.rb.elms.trigger, 'click', this._toggleDropdown);
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
@@ -148,12 +149,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.value = value;
 		this._setInputValue(value);
 		await this.validate();
-		if (this._valid) return; // todo: add method to validation mixin
-		this.rb.elms.rbInput._eMsg = this._eMsg;
-		this.rb.elms.rbInput.setDirty({
-			blurred: true,
-			dirty: true
-		})
 	}
 
 	_setInputToReadonly() { // :void (to prevent using rb-input's readonly styles)
