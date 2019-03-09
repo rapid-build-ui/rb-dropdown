@@ -23,19 +23,22 @@ export class RbDropdown extends FormControl(RbBase()) {
 	viewReady() { // :void
 		super.viewReady && super.viewReady();
 		this.validateValue();
-		Object.assign(this.rb.elms, {
-			focusElm:    this.shadowRoot.querySelector('rb-input').rb.elms.focusElm,
-			formControl: this.shadowRoot.querySelector('rb-input').rb.elms.formControl,
-			menu:        this.shadowRoot.querySelector('.menu'),
-			rbInput:     this.shadowRoot.querySelector('rb-input'),
-			list:        this.shadowRoot.querySelector('ol'),
-			links:       this.shadowRoot.querySelectorAll('li'),
-			// TODO: fix having to go into rb-input's shadow root
-			input:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('input'),
-			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.label'),
-			trigger:     this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.input-wrap')
+		const rbInput = this.shadowRoot.querySelector('rb-input');
+		Object.assign(this.rb.formControl, {
+			elm:      rbInput.rb.formControl.elm,
+			focusElm: rbInput.rb.formControl.focusElm,
 		});
-		this.rb.elms.rbInput.showErrorMessage = true;
+		Object.assign(this.rb.elms, {
+			rbInput,
+			menu:    this.shadowRoot.querySelector('.menu'),
+			list:    this.shadowRoot.querySelector('ol'),
+			links:   this.shadowRoot.querySelectorAll('li'),
+			// TODO: fix having to go into rb-input's shadow root
+			input:   rbInput.shadowRoot.querySelector('input'),
+			label:   rbInput.shadowRoot.querySelector('.label'),
+			trigger: rbInput.shadowRoot.querySelector('.input-wrap')
+		});
+		rbInput.showErrorMessage = true;
 		this.rb.events.add(this.rb.elms.trigger, 'click', this._toggleDropdown);
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
