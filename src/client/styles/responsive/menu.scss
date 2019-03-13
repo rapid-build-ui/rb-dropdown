@@ -5,6 +5,7 @@
 		max-height: 440px;
 		overflow-y: auto;
 		overflow-x: hidden; // needed for firefox on windows
+		-webkit-overflow-scrolling: touch; // momentum scrolling on iOS
 
 		scrollbar-width: thin; // supported by firefox
 		&::-webkit-scrollbar,
