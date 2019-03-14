@@ -7,7 +7,7 @@
 		name="${props.name}"
 		label="${props.label}"
 		icon-kind="caret-down"
-		value="${!!props.value ? this._getInitialValue(props.value) : ''}"
+		value="${this._getInitialValue(this.value)}"
 		?right="${props.right}"
 		?inline="${props.inline}"
 		subtext="${props.subtext}"
@@ -35,13 +35,15 @@
 				<li
 					tabindex="-1"
 					@keydown="${this._onkeydown.bind(this,item)}"
-					class="${JSON.stringify(props.value) === JSON.stringify(item) ? 'active' : ''}"
+					class="${this._setActive(item) ? 'active' : ''}"
 					@click="${this._onclick.bind(this, item)}">
-					${props.labelKey && typeof props.data[0] === 'object'
-						? item[props.labelKey]
-						: typeof item === 'object'
-							? JSON.stringify(item)
-							: item
+					${typeof props.data[0] === 'object' ?
+						(props.labelKey ? item[props.labelKey] :
+							(props.valueKey ? item[props.valueKey] :
+								typeof item === 'object' ? JSON.stringify(item) : item
+							)
+						)
+						: typeof item === 'object' ? JSON.stringify(item) : item
 					}
 				</li>
 			`)}

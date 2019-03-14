@@ -22,7 +22,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	viewReady() { // :void
 		super.viewReady && super.viewReady();
-		this.validateValue();
 		const rbInput = this.shadowRoot.querySelector('rb-input');
 		Object.assign(this.rb.formControl, {
 			elm:      rbInput.rb.formControl.elm,
@@ -56,6 +55,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			inline: props.boolean,
 			label: props.string, // label
 			labelKey: props.string, // sublabels
+			valueKey: props.string, // sublabels
 			right: props.boolean,
 			subtext: props.string,
 			placeholder: props.string,
@@ -90,29 +90,35 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	/* Value Helpers
 	 ****************/
-	validateValue() { // :void
-		if (!this.data.length || !this.value) return;
+	_getMatchOfValueFromData(data, value) { // :boolean
+		let match = undefined;
+		let regex = new RegExp(`^${value}$`, 'i')
 
-		switch (true) {
-			case Type.is.string(this.data[0]):
-				if (this.data.indexOf(this.value) == -1)
-					this.value = undefined;
-				break;
-			case Type.is.object(this.data[0]):
-				if (!this.objectArrayContains(this.data, this.value))
-					this.value = undefined;
-				break;
+		if (!data || !value)
+			return match
+
+		if (Type.is.object(this.data[0]) && !!this.valueKey) {
+			for (const [key,item] of data.entries()) {
+				match = item[this.valueKey].match(regex)
+				if(!!match)	return {index: key, item: item};
+			}
 		}
-	}
-	objectArrayContains() { // :boolean
-		let isMatch = false;
-		for (const item of this.data) {
-			if (JSON.stringify(this.value) === JSON.stringify(item)) {
-				isMatch = true;
-				break;
-			};
+
+		if (Type.is.object(value))
+			regex = new RegExp(`^${JSON.stringify(value)}$`, 'i')
+
+		if (Type.is.string(this.data[0]))
+			for (const [key,item] of data.entries()) {
+				match = item.match(regex)
+				if(!!match) return {index: key, item: item};
+			}
+
+		regex = new RegExp(`^${JSON.stringify(value)}`, 'i')
+		for (const [key,item] of data.entries()) {
+			match = JSON.stringify(item).match(regex)
+			if(!!match) return {index: key, item: item};
 		}
-		return isMatch;
+		return {index: -1, item: null}
 	}
 
 	/* Helpers
@@ -149,8 +155,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const valueChanged = this.valueChanged(value);
 		if (!oninit) this.rb.elms.input.focus();
 		if (!valueChanged && !oninit) return;
-		this.value = value;
-		this._setInputValue(value);
+		this.value = (!!this.valueKey && Type.is.object(this.data[0])) ? value[this.valueKey] : value;
+		if (oninit) this._setInputValue(value);
 		await this.validate();
 	}
 
@@ -180,29 +186,31 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_getInitialValue(value) { // :string
+		const match = this._getMatchOfValueFromData(this.data, value)
+		if (!match)
+			return '';
 		switch(true) {
-			case Type.is.object(value) && !!this.labelKey.length:
-				return value[this.labelKey];
-
-			case Type.is.object(value):
-				return JSON.stringify(value);
-
-			case Type.is.string(value):
-				return value;
-
+			case !!this.valueKey.length && Type.is.object(this.data[0]):
+				this.value = match.item[this.valueKey];
+				return match.item[this.valueKey];
+			case Type.is.object(match.item):
+				return JSON.stringify(match.item);
 			default:
-				return '';
+				return 	match.item;
 		}
 	}
 
 	_selectNext(evt) {
-		let index = this.data.indexOf(this.value) + 1;
+		let match = this._getMatchOfValueFromData(this.data, this.value)
+		let index = !match ? 0 : match.index + 1;
 		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
 	_selectPrevious(evt) {
-		let index = this.data.indexOf(this.value) - 1;
+		let match = this._getMatchOfValueFromData(this.data, this.value)
+		if (!match) return undefined;
+		let index = match.index - 1;
 		if (index < 0 && this.hasAttribute('placeholder')) {
 			this.setValue(null)
 			return
@@ -360,6 +368,19 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const labelStyle = this.rb.elms.label.currentStyle || window.getComputedStyle(this.rb.elms.label);
 		const inputHeightWithOutSubtext = this.rb.elms.label.offsetHeight + this.rb.elms.trigger.offsetHeight + parseInt(labelStyle.marginBottom);
 		this.rb.elms.menu.style.top = (inputHeightWithOutSubtext - this.rb.elms.rbInput.offsetHeight) + 'px'
+	}
+
+	_setActive(item) {
+		switch(true) {
+			case !!this.valueKey && Type.is.object(item):
+				return item[this.valueKey] === this.value
+
+			case Type.is.string(item):
+				return item === this.value;
+
+			default:
+				return false;
+		}
 	}
 
 	_findLinkBasedOnValue(value) {
