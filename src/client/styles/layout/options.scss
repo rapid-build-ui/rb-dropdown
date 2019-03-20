@@ -1,37 +1,14 @@
 /**********
  * OPTIONS
  **********/
-.form-control {
-	&.right {
-		justify-content: flex-end;
-		.sublabel {
-			flex-direction: row-reverse;
-		}
-		.menu {
-			ol {
-				right: -5px;
-				left: auto;
-				li {
-					text-align: right;
-				}
-
+.form-control.right {
+	.menu {
+		ol {
+			right: -5px;
+			left: auto;
+			li {
+				text-align: right;
 			}
-		}
-		&:not(.horizontal) {
-			align-items: flex-end;
-		}
-	}
-
-	/* labels
-	 *********/
-	&.horizontal:not(.right) {
-		.sublabel:not(:last-child) {
-			margin-right: 15px;
-		}
-	}
-	&.right {
-		.sublabel:not(:first-child) {
-			margin-left: 15px;
 		}
 	}
 }

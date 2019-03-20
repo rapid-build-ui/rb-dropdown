@@ -1,13 +1,11 @@
-/* Normalize Scrollbar (mac | windows)
+/***********************
+ * Normalize Scrollbar (mac | windows)
  **********************/
 .menu {
 	ol {
-		max-height: 440px;
-		overflow-y: auto;
-		overflow-x: hidden; // needed for firefox on windows
+		scrollbar-width: thin; // supported by firefox
 		-webkit-overflow-scrolling: touch; // momentum scrolling on iOS
 
-		scrollbar-width: thin; // supported by firefox
 		&::-webkit-scrollbar,
 		&::-webkit-scrollbar-thumb {
 			border-radius: 100px;

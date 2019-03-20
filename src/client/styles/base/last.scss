@@ -5,10 +5,6 @@
 	display: none;
 }
 
-select[hidden] {
-	display: none;
-}
-
 .form-control {
 	&[disabled] {
 		opacity: .65;
