@@ -42,6 +42,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
+		if(!!this.data && Type.is.object(this.data[0]))
+			this._strData = this._stringifyDataObject(this.data)
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 		this._updatePopoverSlot();
@@ -147,8 +149,11 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	valueChanged(value) { // :boolean
-		const valueChanged = this.value !== value;
-		return valueChanged;
+		return this.value !== value;
+	}
+
+	dataChanged(data) { // :boolean
+		JSON.stringify(this.data) !== JSON.stringify(data);
 	}
 
 	async setValue(value, oninit = false) { // :void
@@ -240,20 +245,18 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_preSearch(key) {
-		return new Promise((resolve, reject) => {
-			if (this.searchString === undefined)
-				this.searchString = '';
+		if (this.searchString === undefined)
+			this.searchString = '';
 
-			this.searchString += key;
+		this.searchString += key;
+		this._doSearch(this.searchString)
+		clearTimeout(this.timeout)
 
-			if (this.timeout)
-				return resolve(false);
 
-			this.timeout = setTimeout(() => {
-				this._doSearch(this.searchString)
-				resolve(true);
-			}, 450);
-		});
+		this.timeout = setTimeout(() => {
+			this._postSearch(true)
+		}, 700);
+
 	}
 
 	_doSearch(searchString) {
@@ -261,11 +264,11 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let _data = [];
 		let indexOfMatchedItem = undefined;
 		if (!!this.labelKey) _data = this._getDataForLabelKey();
-		if (!this.labelKey && (typeof this.data[0] == 'object')) {
-			_data = this._stringifyDataObject()
+		if ((!this.labelKey || !this.valueKey) && Type.is.object(this.data[0])) {
+			_data = this._strData
 			regex = new RegExp(searchString, 'i'); //match string and ignore case
 		}
-		if (!this.labelKey && (typeof this.data[0] == 'string')) _data = this.data
+		if (Type.is.string(this.data[0])) _data = this.data
 
 		const match = _data.find((item, index) =>{
 			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
@@ -277,6 +280,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			return this.setValue(this.data[indexOfMatchedItem])
 
 		let linkToFocus = this._findLinkBasedOnValue(match);
+		if(!linkToFocus) return;
 		linkToFocus.focus();
 		this._scrollToFocused(linkToFocus);
 	}
@@ -315,10 +319,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 	/* Observer
 	 ***********/
 	updating(prevProps) { // :void
-		if (prevProps.value === this.value) return;
-		this.rb.events.emit(this, 'value-changed', {
-			detail: { value: this.value }
-		});
+		if (!!prevProps.data && !this.dataChanged(prevProps.data)) { // if data updated we need update necessary itmes from viewReady
+			this.rb.elms.links = this.shadowRoot.querySelectorAll('li');
+			if(Type.is.object(this.data[0])) this._strData = this._stringifyDataObject(this.data)
+		}
+
+		if (this.valueChanged(prevProps.value))
+			this.rb.events.emit(this, 'value-changed', {detail: { value: this.value }});
 	}
 
 	/* Event Handlers
@@ -328,9 +335,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let keyAction = this.getKeyAction(evt)
 		if (keyAction.tab && !this.state.showDropdown) return; //do not prevent when tabbing between elements
 		evt.preventDefault();
-		if (keyAction.search) return this._preSearch(evt.key).then((clear) => {
-			this._postSearch(clear)
-		});
+		if (keyAction.search) return this._preSearch(evt.key)
 		if (keyAction.down && !this.state.showDropdown) return this._selectNext(evt);
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
 		if (keyAction.up && !this.state.showDropdown) return this._selectPrevious(evt);
@@ -384,8 +389,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_findLinkBasedOnValue(value) {
+		const regex = new RegExp('^' + value, 'i'); //match string from the beginning and ignore case
 		const linkArr = [...this.rb.elms.links]; //converts nodeList to an array
-		const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
+		const matchedLink = linkArr.find((item) =>{
+			return (regex.test(item.innerText))
+		})
+
+		// const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
 		return matchedLink;
 	}
 
