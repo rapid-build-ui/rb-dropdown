@@ -42,8 +42,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
-		if(!!this.data && Type.is.object(this.data[0]))
-			this._strData = this._stringifyDataObject(this.data)
+		this._strData = this._stringifyDataObject()
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 		this._updatePopoverSlot();
@@ -92,34 +91,21 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	/* Value Helpers
 	 ****************/
-	_getMatchOfValueFromData(data, value) { // :boolean
+	_getMatchOfValueFromData(value) { // :boolean
 		let match = undefined;
-		let regex = new RegExp(`^${value}$`, 'i')
+		if (!!this.data && !this._strData) this._strData = this._stringifyDataObject()
+		if (!this._strData || !value) return match
+		let _value = Type.is.object(value) ?
+						!!this.labelKey ? value[this.labelKey] :
+							!!this.valueKey ? value[this.valueKey] : JSON.stringify(value)
+					: value
+		let regex = Type.is.object(value) ? new RegExp(`${_value}$`, 'i') : new RegExp(`^${_value}`, 'i')
 
-		if (!data || !value)
-			return match
-
-		if (Type.is.object(this.data[0]) && !!this.valueKey) {
-			for (const [key,item] of data.entries()) {
-				match = item[this.valueKey].match(regex)
-				if(!!match)	return {index: key, item: item};
-			}
+		for (const [key,item] of this._strData.entries()) {
+			match = item.match(regex)
+			if(!!match) return {index: key, item: this.data[key]};
 		}
 
-		if (Type.is.object(value))
-			regex = new RegExp(`^${JSON.stringify(value)}$`, 'i')
-
-		if (Type.is.string(this.data[0]))
-			for (const [key,item] of data.entries()) {
-				match = item.match(regex)
-				if(!!match) return {index: key, item: item};
-			}
-
-		regex = new RegExp(`^${JSON.stringify(value)}`, 'i')
-		for (const [key,item] of data.entries()) {
-			match = JSON.stringify(item).match(regex)
-			if(!!match) return {index: key, item: item};
-		}
 		return {index: -1, item: null}
 	}
 
@@ -161,7 +147,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if (!oninit) this.rb.elms.input.focus();
 		if (!valueChanged && !oninit) return;
 		this.value = (!!this.valueKey && Type.is.object(this.data[0])) ? value[this.valueKey] : value;
-		if (oninit) this._setInputValue(value);
 		await this.validate();
 	}
 
@@ -174,46 +159,30 @@ export class RbDropdown extends FormControl(RbBase()) {
 		input.style.textOverflow = 'ellipsis';
 	}
 
-	_setInputValue(value) { // :void
-		switch(true) {
-			case Type.is.object(value) && !!this.labelKey.length:
-				return this.rb.elms.rbInput.value = value[this.labelKey];
-
-			case Type.is.object(value):
-				return this.rb.elms.rbInput.value = JSON.stringify(value);
-
-			case Type.is.null(value):
-				return this.rb.elms.rbInput.value = '';
-
-			default:
-				this.rb.elms.rbInput.value = value;
-		}
-	}
-
 	_getInitialValue(value) { // :string
-		const match = this._getMatchOfValueFromData(this.data, value)
+		const match = this._getMatchOfValueFromData(value)
 		if (!match)
 			return '';
-		switch(true) {
-			case !!this.valueKey.length && Type.is.object(this.data[0]):
-				this.value = match.item[this.valueKey];
-				return match.item[this.valueKey];
-			case Type.is.object(match.item):
-				return JSON.stringify(match.item);
-			default:
-				return 	match.item;
-		}
+
+		const result = Type.is.object(match.item) ? (!!this.labelKey ? match.item[this.labelKey]
+								: (!!this.valueKey ? match.item[this.valueKey]
+												: JSON.stringify(match.item))) : match.item;
+
+		if (!result) return '';
+
+		return result;
+
 	}
 
 	_selectNext(evt) {
-		let match = this._getMatchOfValueFromData(this.data, this.value)
+		let match = this._getMatchOfValueFromData(this.value)
 		let index = !match ? 0 : match.index + 1;
 		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
 	_selectPrevious(evt) {
-		let match = this._getMatchOfValueFromData(this.data, this.value)
+		let match = this._getMatchOfValueFromData(this.value)
 		if (!match) return undefined;
 		let index = match.index - 1;
 		if (index < 0 && this.hasAttribute('placeholder')) {
@@ -265,26 +234,26 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	}
 
-	_searchByOneLetter(char, data) {
+	_searchByOneLetter(char, stringifiedData) {
 		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
-		const match = this._getMatchOfValueFromData(data, this.value);
-		const nextElementMatch = this._getMatchOfValueFromData(data, data[match.index + 1]);
+		const matchedItem = this._getMatchOfValueFromData(this.value);
+		const nextElementMatch = this._getMatchOfValueFromData(this.data[matchedItem.index + 1]);
+		const nextElementMatchLabel = Type.is.object(nextElementMatch.item) ? (!!this.labelKey ? nextElementMatch.item[this.labelKey] : nextElementMatch.item) : nextElementMatch.item;
+
 		let indexOfMatchedItem = undefined;
 
-		if (!regex.test(nextElementMatch.item))	{ // go to beginning if next item didn't match char
-			const match = this.data.find((item, index) =>{
+		if (!regex.test(nextElementMatchLabel))	{ // go to beginning if next item didn't match char
+			const match = stringifiedData.find((item, index) =>{
 				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 				return regex.test(item)
 			})
 
-			if(!match) return;
+			if(!matchedItem) return;
 			return this.setValue(this.data[indexOfMatchedItem])
 		}
 
 		if (!this.state.showDropdown){ // closed dropdown
-			if (regex.test(match.item)) {
-				this.setValue(data[match.index + 1])
-			}
+			this.setValue(this.data[nextElementMatch.index])
 		}
 
 	}
@@ -293,15 +262,17 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
 		let _data = [];
 		let indexOfMatchedItem = undefined;
-		if (!!this.labelKey) _data = this._getDataForLabelKey();
-		if ((!this.labelKey || !this.valueKey) && Type.is.object(this.data[0])) {
+		if (!!this.labelKey || !!this.valueKey) _data = this._getDataForKey(!!this.valueKey ? this.valueKey : this.labelKey);
+		if ((!this.labelKey && !this.valueKey) && Type.is.object(this.data[0])) {
 			_data = this._strData
 			regex = new RegExp(searchString, 'i'); //match string and ignore case
 		}
 		if (Type.is.string(this.data[0])) _data = this.data
+		const _label = Type.is.object(this.value) ? (!!this.labelKey ? this.value[this.labelKey]
+																	: (!!this.valueKey ? this.value[this.valueKey] : this.value)) : this.value;
 
-		if (!!this.value && ((this.searchString.length == 1	&&
-				this.value.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
+		if (!!this.value  && Type.is.string(_label) && ((this.searchString.length == 1 &&
+				_label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
 			) || this._hasRepeatedLetters(this.searchString)))
 			return this._searchByOneLetter(this.searchString.charAt(0), _data);
 
@@ -328,18 +299,32 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.searchString = '';
 	}
 
-	_getDataForLabelKey() {
+	_getDataForKey(key) {
 		const _data = [];
 		for (const item of this.data)
-			_data.push(item[this.labelKey]);
+			_data.push(item[key]);
 		return _data;
 	}
 
 	_stringifyDataObject() {
 		const _data = [];
-		for (const item of this.data)
-			_data.push(JSON.stringify(item));
-		return _data;
+		if (!this.data) return undefined;
+		const dataIsObject = Type.is.object(this.data[0])
+		const key = !!this.valueKey ? this.valueKey : (!!this.labelKey ? this.labelKey : null)
+
+		if (!!key && dataIsObject) {
+			for (const item of this.data)
+				_data.push(item[key]);
+			return _data;
+		}
+
+		if (dataIsObject) {
+			for (const item of this.data)
+				_data.push(JSON.stringify(item));
+			return _data;
+		}
+
+		return this.data;
 	}
 
 	_indexIsOutOfDataRange(index){
@@ -357,7 +342,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 	updating(prevProps) { // :void
 		if (!!prevProps.data && !this.dataChanged(prevProps.data)) { // if data updated we need update necessary itmes from viewReady
 			this.rb.elms.links = this.shadowRoot.querySelectorAll('li');
-			if(Type.is.object(this.data[0])) this._strData = this._stringifyDataObject(this.data)
+			this._strData = this._stringifyDataObject()
 		}
 
 		if (this.valueChanged(prevProps.value))
@@ -412,16 +397,9 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_setActive(item) {
-		switch(true) {
-			case !!this.valueKey && Type.is.object(item):
-				return item[this.valueKey] === this.value
-
-			case Type.is.string(item):
-				return item === this.value;
-
-			default:
-				return false;
-		}
+		if (!this.value) return undefined;
+		let match = this._getMatchOfValueFromData(this.value);
+		return JSON.stringify(match.item) === JSON.stringify(item)
 	}
 
 	_findLinkBasedOnValue(value) {
@@ -431,7 +409,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 			return (regex.test(item.innerText))
 		})
 
-		// const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
 		return matchedLink;
 	}
 
