@@ -218,13 +218,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 		return patt.test(str);
 	}
 
-	_preSearch(key) {
+	_preSearch(evt) {
 		if (this.searchString === undefined)
 			this.searchString = '';
 
-		this.searchString += key;
+		this.searchString += evt.key;
 
-		this._doSearch(this.searchString)
+		this._doSearch(this.searchString, evt)
 		clearTimeout(this.timeout)
 
 
@@ -234,49 +234,58 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	}
 
-	_searchByOneLetter(char, stringifiedData) {
+	_searchByOneLetter(char, evt) {
 		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
-		const matchedItem = this._getMatchOfValueFromData(this.value);
+		const matchedItem = this._getMatchOfValueFromData(this.value)
 		const nextElementMatch = this._getMatchOfValueFromData(this.data[matchedItem.index + 1]);
 		const nextElementMatchLabel = Type.is.object(nextElementMatch.item) ? (!!this.labelKey ? nextElementMatch.item[this.labelKey] : nextElementMatch.item) : nextElementMatch.item;
 
 		let indexOfMatchedItem = undefined;
 
-		if (!regex.test(nextElementMatchLabel))	{ // go to beginning if next item didn't match char
-			const match = stringifiedData.find((item, index) =>{
+
+		if (!this.state.showDropdown){ // closed dropdown
+			if (!regex.test(nextElementMatchLabel))	{ // go to beginning if next item didn't match char
+				const match = this._strData.find((item, index) =>{
+					indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+					return regex.test(item)
+				})
+
+				if(!matchedItem) return;
+				return this.setValue(this.data[indexOfMatchedItem])
+			}
+			return this.setValue(this.data[nextElementMatch.index])
+		}
+
+		// set Next element active
+		let focusedLi = evt.composedPath()[0];
+		const nextLi = focusedLi.nextElementSibling
+
+		if (!regex.test(nextLi.innerText.trim()))	{ // go to beginning if next item didn't match char
+			const match = this._strData.find((item, index) =>{
 				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 				return regex.test(item)
 			})
 
-			if(!matchedItem) return;
-			return this.setValue(this.data[indexOfMatchedItem])
+			return this._findLinkBasedOnValue(match).focus()
 		}
-
-		if (!this.state.showDropdown){ // closed dropdown
-			this.setValue(this.data[nextElementMatch.index])
-		}
-
+		nextLi.focus();
 	}
 
-	_doSearch(searchString) {
+	_doSearch(searchString, evt) {
 		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
-		let _data = [];
 		let indexOfMatchedItem = undefined;
-		if (!!this.labelKey || !!this.valueKey) _data = this._getDataForKey(!!this.valueKey ? this.valueKey : this.labelKey);
-		if ((!this.labelKey && !this.valueKey) && Type.is.object(this.data[0])) {
-			_data = this._strData
+		if ((!this.labelKey && !this.valueKey) && Type.is.object(this.data[0]))
 			regex = new RegExp(searchString, 'i'); //match string and ignore case
-		}
-		if (Type.is.string(this.data[0])) _data = this.data
+
 		const _label = Type.is.object(this.value) ? (!!this.labelKey ? this.value[this.labelKey]
 																	: (!!this.valueKey ? this.value[this.valueKey] : this.value)) : this.value;
 
-		if (!!this.value  && Type.is.string(_label) && ((this.searchString.length == 1 &&
+		if (!!this.value && Type.is.string(_label) && ((this.searchString.length == 1 &&
 				_label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
 			) || this._hasRepeatedLetters(this.searchString)))
-			return this._searchByOneLetter(this.searchString.charAt(0), _data);
+			return this._searchByOneLetter(this.searchString.charAt(0), evt);
 
-		const match = _data.find((item, index) =>{
+		const match = this._strData.find((item, index) =>{
 			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 			return regex.test(item)
 		})
@@ -356,7 +365,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let keyAction = this.getKeyAction(evt)
 		if (keyAction.tab && !this.state.showDropdown) return; //do not prevent when tabbing between elements
 		evt.preventDefault();
-		if (keyAction.search) return this._preSearch(evt.key)
+		if (keyAction.search) return this._preSearch(evt)
 		if (keyAction.down && !this.state.showDropdown) return this._selectNext(evt);
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
 		if (keyAction.up && !this.state.showDropdown) return this._selectPrevious(evt);
@@ -399,7 +408,10 @@ export class RbDropdown extends FormControl(RbBase()) {
 	_setActive(item) {
 		if (!this.value) return undefined;
 		let match = this._getMatchOfValueFromData(this.value);
-		return JSON.stringify(match.item) === JSON.stringify(item)
+		if (JSON.stringify(match.item) === JSON.stringify(item)){
+			this.activeItem = item
+			return true;
+		}
 	}
 
 	_findLinkBasedOnValue(value) {
