@@ -244,11 +244,17 @@ export class RbDropdown extends FormControl(RbBase()) {
 		liToSetFocus.focus();
 	}
 
+	_hasRepeatedLetters(str) {
+		const patt = /^([a-z])\1+$/;
+		return patt.test(str);
+	}
+
 	_preSearch(key) {
 		if (this.searchString === undefined)
 			this.searchString = '';
 
 		this.searchString += key;
+
 		this._doSearch(this.searchString)
 		clearTimeout(this.timeout)
 
@@ -256,6 +262,32 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.timeout = setTimeout(() => {
 			this._postSearch(true)
 		}, 700);
+
+	}
+
+	_searchByOneLetter(char, data) {
+		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
+		const match = this._getMatchOfValueFromData(data, this.value);
+		const nextElementMatch = this._getMatchOfValueFromData(data, data[match.index + 1]);
+		let indexOfMatchedItem = undefined;
+
+
+		if (!regex.test(nextElementMatch.item))	{ // go to beginning if next itme didn't match char
+			const match = this.data.find((item, index) =>{
+				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+				return regex.test(item)
+			})
+
+			if(!match) return;
+			return this.setValue(this.data[indexOfMatchedItem])
+		}
+
+
+		if (!this.state.showDropdown){ // closed dropdown
+			if (regex.test(match.item)) {
+				this.setValue(data[match.index + 1])
+			}
+		}
 
 	}
 
@@ -270,10 +302,16 @@ export class RbDropdown extends FormControl(RbBase()) {
 		}
 		if (Type.is.string(this.data[0])) _data = this.data
 
+		if ((this.searchString.length == 1	&&
+				this.value.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
+			) || this._hasRepeatedLetters(this.searchString))
+			return this._searchByOneLetter(this.searchString.charAt(0), _data);
+
 		const match = _data.find((item, index) =>{
 			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
-			return (regex.test(item))
+			return regex.test(item)
 		})
+
 		if (!match) return;
 
 		if (!this.state.showDropdown)
