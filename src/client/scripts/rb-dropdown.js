@@ -236,9 +236,12 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_searchByOneLetter(char, evt) {
 		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
-		const matchedItem = this._getMatchOfValueFromData(this.value)
-		const nextElementMatch = this._getMatchOfValueFromData(this.data[matchedItem.index + 1]);
-		const nextElementMatchLabel = Type.is.object(nextElementMatch.item) ? (!!this.labelKey ? nextElementMatch.item[this.labelKey] : nextElementMatch.item) : nextElementMatch.item;
+		const matchedItem = !!this.value ? this._getMatchOfValueFromData(this.value) : undefined;
+		const nextElementMatch = !!matchedItem ? this._getMatchOfValueFromData(this.data[matchedItem.index + 1]) : undefined;
+		const nextElementMatchLabel = !!nextElementMatch && Type.is.object(nextElementMatch.item) ?
+			(!!this.labelKey ? nextElementMatch.item[this.labelKey] :
+				!!this.valueKey ? nextElementMatch.item[this.valueKey]:
+					!!nextElementMatch ? nextElementMatch.item : undefined) : undefined
 
 		let indexOfMatchedItem = undefined;
 
@@ -250,7 +253,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 					return regex.test(item)
 				})
 
-				if(!matchedItem) return;
+				if(!match) return;
 				return this.setValue(this.data[indexOfMatchedItem])
 			}
 			return this.setValue(this.data[nextElementMatch.index])
@@ -260,13 +263,16 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let focusedLi = evt.composedPath()[0];
 		const nextLi = focusedLi.nextElementSibling
 
-		if (!regex.test(nextLi.innerText.trim()))	{ // go to beginning if next item didn't match char
+		if (!nextLi || !regex.test(nextLi.innerText.trim()))	{ // go to beginning if next item didn't match char
 			const match = this._strData.find((item, index) =>{
 				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 				return regex.test(item)
 			})
+			const linkForValue= this._findLinkBasedOnValue(match);
+			if (!!linkForValue)
+				return linkForValue.focus()
 
-			return this._findLinkBasedOnValue(match).focus()
+			return
 		}
 		nextLi.focus();
 	}
@@ -280,7 +286,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const _label = Type.is.object(this.value) ? (!!this.labelKey ? this.value[this.labelKey]
 																	: (!!this.valueKey ? this.value[this.valueKey] : this.value)) : this.value;
 
-		if (!!this.value && Type.is.string(_label) && ((this.searchString.length == 1 &&
+		if (!this.value || !!this.value && Type.is.string(_label) && ((this.searchString.length == 1 &&
 				_label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
 			) || this._hasRepeatedLetters(this.searchString)))
 			return this._searchByOneLetter(this.searchString.charAt(0), evt);
