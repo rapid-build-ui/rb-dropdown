@@ -158,7 +158,11 @@ export class RbDropdown extends FormControl(RbBase()) {
 		input.style.whiteSpace   = 'nowrap';
 		input.style.textOverflow = 'ellipsis';
 	}
-
+	_setRbInputActiveStatus(activeFlg) {
+		setTimeout(()=>{
+			this.rb.elms.rbInput._active = activeFlg;
+		})
+	}
 	_getInitialValue(value) { // :string
 		const match = this._getMatchOfValueFromData(value)
 		if (!match)
@@ -371,6 +375,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		let keyAction = this.getKeyAction(evt)
 		if (keyAction.tab && !this.state.showDropdown) return; //do not prevent when tabbing between elements
 		evt.preventDefault();
+		this._setRbInputActiveStatus(true)
 		if (keyAction.search) return this._preSearch(evt)
 		if (keyAction.down && !this.state.showDropdown) return this._selectNext(evt);
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
@@ -397,6 +402,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this._positionMenu()
 		this.triggerUpdate();
 		this._scrollToActive(true);
+		if (this.state.showDropdown) this._setRbInputActiveStatus(true)
+
 	}
 
 	_closeDropdown(evt) { // :void
@@ -455,6 +462,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if (path.includes(this.rb.elms.label)) return;
 		if (path.includes(this.rb.elms.trigger)) return;
 		this._toggleDropdown(evt);
+		this._setRbInputActiveStatus(false)
 	}
 
 	/* Template
