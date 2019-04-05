@@ -416,21 +416,23 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const { label, list, menu, rbInput, trigger } = this.rb.elms;
 
 		const labelStyle = label.currentStyle || window.getComputedStyle(label);
+		const listLiStyle = window.getComputedStyle(this.rb.elms.links[0])
+		const allLiHeight = (parseInt(listLiStyle.minHeight) + 2 * parseInt(listLiStyle.paddingTop)) * this.rb.elms.links.length
 		const inputHeightWithOutSubtext = label.offsetHeight + trigger.offsetHeight + parseInt(labelStyle.marginBottom);
 		menu.style.top = (inputHeightWithOutSubtext - rbInput.offsetHeight) + 'px'
 		const rbInputViewPortPos = rbInput.getBoundingClientRect();
 		const spaceBelowInput = window.innerHeight - rbInputViewPortPos.top;
 
+
 		if (spaceBelowInput < rbInputViewPortPos.top) { // display menu on top
-			menu.style.top = `${0 - rbInputViewPortPos.top}px`;
-			list.style.height = (rbInputViewPortPos.top - inputHeightWithOutSubtext - 5) + 'px';
+			const height = (rbInputViewPortPos.top - inputHeightWithOutSubtext - 5);
+			menu.style.top = (height > allLiHeight) ? `${0 - rbInputViewPortPos.top + (height - allLiHeight)}px` : `${0 - rbInputViewPortPos.top}px`;
+
+			list.style.height = (height > allLiHeight) ? `${allLiHeight}px` : `${height}px`;
 			return;
 		}
-
-		list.style.height = (spaceBelowInput - 100) + 'px'
+		list.style.height = ((spaceBelowInput - 100) > allLiHeight) ? `${allLiHeight}px` : `${spaceBelowInput - 100}px`;
 	}
-
-
 
 	_setActive(item) {
 		if (!this.value) return undefined;
