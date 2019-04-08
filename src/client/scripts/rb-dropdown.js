@@ -42,7 +42,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
-		this._strData = this._stringifyDataObject()
+		this._setInitialKeysAndData()
 		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
 		this._updatePopoverSlot();
@@ -91,19 +91,17 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	/* Value Helpers
 	 ****************/
-	_getMatchOfValueFromData(value) { // :boolean
+	_getMatchOfValueFromData(value) { // : {index, matched item}
 		let match = undefined;
-		if (!!this.data && !this._strData) this._strData = this._stringifyDataObject()
-		if (!this._strData || !value) return match
-		let _value = Type.is.object(value) ?
-						!!this.labelKey ? value[this.labelKey] :
-							!!this.valueKey ? value[this.valueKey] : JSON.stringify(value)
-					: value
-		let regex = Type.is.object(value) ? new RegExp(`${_value}$`, 'i') : new RegExp(`^${_value}`, 'i')
+		if (!value) return match;
+		const _value = Type.is.object(value) ? (!!this._key ? value[this._key] : JSON.stringify(value)) : value
 
-		for (const [key,item] of this._strData.entries()) {
-			match = item.match(regex)
-			if(!!match) return {index: key, item: this.data[key]};
+		let regex = new RegExp(`^${_value}`, 'i')
+
+		for (const [key,item] of this.data.entries()) {
+			if(!this._key && JSON.stringify(item) === _value) return {index: key, item: this.data[key]};
+			match = (Type.is.object(item) && !!this._key) ?	regex.test(item[this._key])	: regex.test(item)
+			if (!!match) return {index: key, item: this.data[key]};
 		}
 
 		return {index: -1, item: null}
@@ -163,6 +161,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 			this.rb.elms.rbInput._active = activeFlg;
 		})
 	}
+
+	_setInitialKeysAndData() {
+		if (!this._searchKey) this._searchKey = !!this.labelKey ? this.labelKey : (!!this.valueKey ? this.valueKey : undefined)
+		if (!this._key) this._key = !!this.valueKey ? this.valueKey : (!!this.labelKey ? this.labelKey : undefined)
+		if (!this._searchData) this._searchData = this._getSearchData(this._searchKey)
+	}
+
 	_getInitialValue(value) { // :string
 		const match = this._getMatchOfValueFromData(value)
 		if (!match)
@@ -218,7 +223,8 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	_hasRepeatedLetters(str) {
-		const patt = /^([a-z])\1+$/;
+		const patt = /^([a-z])\1+$/i;
+		str = str.slice(0, 2)
 		return patt.test(str);
 	}
 
@@ -234,25 +240,24 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 		this.timeout = setTimeout(() => {
 			this._postSearch(true)
-		}, 700);
+		}, 450);
 
 	}
 
 	_searchByOneLetter(char, evt) {
 		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
 		const matchedItem = !!this.value ? this._getMatchOfValueFromData(this.value) : undefined;
-		const nextElementMatch = !!matchedItem ? this._getMatchOfValueFromData(this.data[matchedItem.index + 1]) : undefined;
+		const nextElementMatch = !!matchedItem ? {index: matchedItem.index + 1, item: this.data[matchedItem.index + 1]} : undefined;
 		const nextElementMatchLabel = !!nextElementMatch && Type.is.object(nextElementMatch.item) ?
 			(!!this.labelKey ? nextElementMatch.item[this.labelKey] :
 				!!this.valueKey ? nextElementMatch.item[this.valueKey]:
-					!!nextElementMatch ? nextElementMatch.item : undefined) : undefined
+					!!nextElementMatch ? nextElementMatch.item : undefined) : nextElementMatch.item
 
 		let indexOfMatchedItem = undefined;
 
-
 		if (!this.state.showDropdown){ // closed dropdown
 			if (!regex.test(nextElementMatchLabel))	{ // go to beginning if next item didn't match char
-				const match = this._strData.find((item, index) =>{
+				const match = this._searchData.find((item, index) =>{
 					indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 					return regex.test(item)
 				})
@@ -268,7 +273,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const nextLi = focusedLi.nextElementSibling
 
 		if (!nextLi || !regex.test(nextLi.innerText.trim()))	{ // go to beginning if next item didn't match char
-			const match = this._strData.find((item, index) =>{
+			const match = this._searchData.find((item, index) =>{
 				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 				return regex.test(item)
 			})
@@ -289,13 +294,13 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 		const _label = Type.is.object(this.value) ? (!!this.labelKey ? this.value[this.labelKey]
 																	: (!!this.valueKey ? this.value[this.valueKey] : this.value)) : this.value;
+		if (this._hasRepeatedLetters(this.searchString) ||
+				(Type.is.string(_label) &&
+					(this.searchString.length == 1 && _label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
+			)))
+			return this._searchByOneLetter(this.searchString.charAt(searchString.length-1), evt);
 
-		if (!this.value || !!this.value && Type.is.string(_label) && ((this.searchString.length == 1 &&
-				_label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
-			) || this._hasRepeatedLetters(this.searchString)))
-			return this._searchByOneLetter(this.searchString.charAt(0), evt);
-
-		const match = this._strData.find((item, index) =>{
+		const match = this._searchData.find((item, index) =>{
 			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
 			return regex.test(item)
 		})
@@ -325,18 +330,16 @@ export class RbDropdown extends FormControl(RbBase()) {
 		return _data;
 	}
 
-	_stringifyDataObject() {
+	_getSearchData(key=this._searchKey) {
 		const _data = [];
 		if (!this.data) return undefined;
 		const dataIsObject = Type.is.object(this.data[0])
-		const key = !!this.valueKey ? this.valueKey : (!!this.labelKey ? this.labelKey : null)
 
 		if (!!key && dataIsObject) {
 			for (const item of this.data)
 				_data.push(item[key]);
 			return _data;
 		}
-
 		if (dataIsObject) {
 			for (const item of this.data)
 				_data.push(JSON.stringify(item));
@@ -359,9 +362,9 @@ export class RbDropdown extends FormControl(RbBase()) {
 	/* Observer
 	 ***********/
 	updating(prevProps) { // :void
+		this._setInitialKeysAndData()
 		if (!!prevProps.data && !this.dataChanged(prevProps.data)) { // if data updated we need update necessary itmes from viewReady
 			this.rb.elms.links = this.shadowRoot.querySelectorAll('li');
-			this._strData = this._stringifyDataObject()
 		}
 
 		if (this.valueChanged(prevProps.value))
