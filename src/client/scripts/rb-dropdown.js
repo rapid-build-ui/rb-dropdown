@@ -137,7 +137,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	dataChanged(data) { // :boolean
-		JSON.stringify(this.data) !== JSON.stringify(data);
+		return JSON.stringify(this.data) !== JSON.stringify(data);
 	}
 
 	async setValue(value, oninit = false) { // :void
@@ -361,6 +361,10 @@ export class RbDropdown extends FormControl(RbBase()) {
 	/* Observer
 	 ***********/
 	updating(prevProps) { // :void
+		if (this.dataChanged(prevProps.data)) this._searchData = null;
+		if (prevProps._key !== this._key) this._key = null;
+		if (prevProps._searchKey !== this._searchKey) this._searchKey = null;
+
 		this._setInitialKeysAndData()
 		if (!!prevProps.data && !this.dataChanged(prevProps.data)) { // if data updated we need update necessary itmes from viewReady
 			this.rb.elms.links = this.shadowRoot.querySelectorAll('li');
