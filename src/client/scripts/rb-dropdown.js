@@ -251,8 +251,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		const nextElementMatchLabel = !!nextElementMatch && Type.is.object(nextElementMatch.item) ?
 			(!!this.labelKey ? nextElementMatch.item[this.labelKey] :
 				!!this.valueKey ? nextElementMatch.item[this.valueKey]:
-					!!nextElementMatch ? nextElementMatch.item : undefined) : nextElementMatch.item
-
+					!!nextElementMatch ? nextElementMatch.item : undefined) : (!nextElementMatch ? undefined : nextElementMatch.item)
 		let indexOfMatchedItem = undefined;
 
 		if (!this.state.showDropdown){ // closed dropdown
