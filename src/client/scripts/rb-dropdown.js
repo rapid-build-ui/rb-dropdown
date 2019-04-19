@@ -409,7 +409,6 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.triggerUpdate();
 		this._scrollToActive(true);
 		if (this.state.showDropdown) this._setRbInputActiveStatus(true)
-
 	}
 
 	_closeDropdown(evt) { // :void
@@ -484,7 +483,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if (path.includes(this.rb.elms.label)) return;
 		if (path.includes(this.rb.elms.trigger)) return;
 		this._toggleDropdown(evt);
-		this._setRbInputActiveStatus(false)
+		this.rb.elms.input.blur();
 	}
 
 	/* Template
