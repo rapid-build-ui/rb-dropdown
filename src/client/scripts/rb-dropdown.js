@@ -422,7 +422,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 		const labelStyle = label.currentStyle || window.getComputedStyle(label);
 		const listLiStyle = window.getComputedStyle(this.rb.elms.links[0])
-		const allLiHeight = (parseInt(listLiStyle.minHeight) + 2 * parseInt(listLiStyle.paddingTop)) * this.rb.elms.links.length
+		const allLiHeight = (parseInt(listLiStyle.lineHeight) + 2 * parseInt(listLiStyle.paddingTop)) * this.rb.elms.links.length
 		const inputHeightWithOutSubtext = label.offsetHeight + trigger.offsetHeight + parseInt(labelStyle.marginBottom);
 		menu.style.top = (inputHeightWithOutSubtext - rbInput.offsetHeight) + 'px'
 		const rbInputViewPortPos = rbInput.getBoundingClientRect();
