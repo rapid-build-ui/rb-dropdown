@@ -22,24 +22,30 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	viewReady() { // :void
 		super.viewReady && super.viewReady();
-		this.validateValue();
-		Object.assign(this.rb.elms, {
-			focusElm:    this.shadowRoot.querySelector('.sublabel'),
-			formControl: this.shadowRoot.querySelector('input'),
-			menu:        this.shadowRoot.querySelector('.menu'),
-			rbInput:     this.shadowRoot.querySelector('rb-input'),
-			list:        this.shadowRoot.querySelector('ol'),
-			links:       this.shadowRoot.querySelectorAll('li'),
-			// TODO: fix having to go into rb-input's shadow root
-			input:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('input'),
-			label:       this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('label'),
-			trigger:     this.shadowRoot.querySelector('rb-input').shadowRoot.querySelector('.input-wrap')
+		const rbInput = this.shadowRoot.querySelector('rb-input');
+		Object.assign(this.rb.formControl, {
+			elm:      rbInput.rb.formControl.elm,
+			focusElm: rbInput.rb.formControl.focusElm,
 		});
+		Object.assign(this.rb.elms, {
+			rbInput,
+			menu:    this.shadowRoot.querySelector('.menu'),
+			list:    this.shadowRoot.querySelector('ol'),
+			links:   this.shadowRoot.querySelectorAll('li'),
+			// TODO: fix having to go into rb-input's shadow root
+			input:   rbInput.shadowRoot.querySelector('input'),
+			label:   rbInput.shadowRoot.querySelector('.label'),
+			trigger: rbInput.shadowRoot.querySelector('.input-wrap')
+		});
+		rbInput.showErrorMessage = true;
 		this.rb.events.add(this.rb.elms.trigger, 'click', this._toggleDropdown);
 		this.rb.events.add(window, 'click touchstart', this._windowClickToggle, {
 			capture: true // so event fires first
 		});
+		this._setInitialKeysAndData()
+		this._setInputToReadonly();
 		this._initSlotStates(); // see rb-base: private/mixins/slot.js
+		this._updatePopoverSlot();
 	}
 
 	/* Properties
@@ -50,6 +56,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			inline: props.boolean,
 			label: props.string, // label
 			labelKey: props.string, // sublabels
+			valueKey: props.string, // sublabels
 			right: props.boolean,
 			subtext: props.string,
 			placeholder: props.string,
@@ -84,29 +91,20 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	/* Value Helpers
 	 ****************/
-	validateValue() { // :void
-		if (!this.data.length || !this.value) return;
+	_getMatchOfValueFromData(value) { // : {index, matched item}
+		let match = undefined;
+		if (!value) return match;
+		const _value = Type.is.object(value) ? (!!this._key ? value[this._key] : JSON.stringify(value)) : value
 
-		switch (true) {
-			case Type.is.string(this.data[0]):
-				if (this.data.indexOf(this.value) == -1)
-					this.value = undefined;
-				break;
-			case Type.is.object(this.data[0]):
-				if (!this.objectArrayContains(this.data, this.value))
-					this.value = undefined;
-				break;
+		let regex = new RegExp(`^${_value}`, 'i')
+
+		for (const [key,item] of this.data.entries()) {
+			if(!this._key && JSON.stringify(item) === _value) return {index: key, item: this.data[key]};
+			match = (Type.is.object(item) && !!this._key) ?	regex.test(item[this._key])	: regex.test(item)
+			if (!!match) return {index: key, item: this.data[key]};
 		}
-	}
-	objectArrayContains() { // :boolean
-		let isMatch = false;
-		for (const item of this.data) {
-			if (JSON.stringify(this.value) === JSON.stringify(item)) {
-				isMatch = true;
-				break;
-			};
-		}
-		return isMatch;
+
+		return {index: -1, item: null}
 	}
 
 	/* Helpers
@@ -135,56 +133,72 @@ export class RbDropdown extends FormControl(RbBase()) {
 	}
 
 	valueChanged(value) { // :boolean
-		const valueChanged = this.value !== value;
-		return valueChanged;
+		return this.value !== value;
 	}
 
-	async setValue(value) { // :void
+	dataChanged(data) { // :boolean
+		return JSON.stringify(this.data) !== JSON.stringify(data);
+	}
+
+	async setValue(value, oninit = false) { // :void
 		const valueChanged = this.valueChanged(value);
-		this.rb.elms.input.focus();
-		if (valueChanged) {
-			this.value = value;
-			this._setInputValue(value);
-			await this.validate();
-			if (this._valid) return; // todo: add method to validation mixin
-			this.rb.elms.rbInput._eMsg = this._eMsg;
-			this.rb.elms.rbInput.setDirty({
-				blurred: true,
-				dirty: true
-			})
-		}
-
+		if (!oninit) this.rb.elms.input.focus();
+		if (!valueChanged && !oninit) return;
+		this.value = (!!this.valueKey && Type.is.object(this.data[0])) ? value[this.valueKey] : value;
+		await this.validate();
 	}
 
-	_setInputValue(value) {
-		switch(true) {
-			case Type.is.object(value) && !!this.labelKey.length:
-				return this.rb.elms.rbInput.value = value[this.labelKey];
+	_setInputToReadonly() { // :void (to prevent using rb-input's readonly styles)
+		const { input } = this.rb.elms;
+		input.readOnly = true;
+		input.style.cursor       = 'pointer';
+		input.style.overflow     = 'hidden';
+		input.style.whiteSpace   = 'nowrap';
+		input.style.textOverflow = 'ellipsis';
+	}
+	_setRbInputActiveStatus(activeFlg) {
+		setTimeout(()=>{
+			this.rb.elms.rbInput._active = activeFlg;
+		})
+	}
 
-			case Type.is.object(value):
-				return this.rb.elms.rbInput.value = JSON.stringify(value);
+	_setInitialKeysAndData() {
+		if (!this._searchKey) this._searchKey = !!this.labelKey ? this.labelKey : (!!this.valueKey ? this.valueKey : undefined)
+		if (!this._key) this._key = !!this.valueKey ? this.valueKey : (!!this.labelKey ? this.labelKey : undefined)
+		if (!this._searchData) this._searchData = this._getSearchData(this._searchKey)
+	}
 
-			case Type.is.null(value):
-				return this.rb.elms.rbInput.value = '';
+	_getInitialValue(value) { // :string
+		const match = this._getMatchOfValueFromData(value)
+		if (!match)
+			return '';
 
-			default:
-				this.rb.elms.rbInput.value = value;
-		}
+		const result = Type.is.object(match.item) ? (!!this.labelKey ? match.item[this.labelKey]
+								: (!!this.valueKey ? match.item[this.valueKey]
+												: JSON.stringify(match.item))) : match.item;
+
+		if (!result) return '';
+
+		return result;
+
 	}
 
 	_selectNext(evt) {
-		let index = this.data.indexOf(this.value) + 1;
-		if(this._indexIsOutOfDataRange(index)) return;
+		let match = this._getMatchOfValueFromData(this.value)
+		let index = !match ? 0 : match.index + 1;
+		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
 	_selectPrevious(evt) {
-		let index = this.data.indexOf(this.value) - 1;
-		if(index < 0 && !!this.placeholder) {
+		let match = this._getMatchOfValueFromData(this.value)
+		if (!match) return undefined;
+		let index = match.index - 1;
+		if (index < 0 && this.hasAttribute('placeholder')) {
 			this.setValue(null)
 			return
 		}
-		if(this._indexIsOutOfDataRange(index)) return;
+		if (this._indexIsOutOfDataRange(index)) return;
 		this.setValue(this.data[index])
 	}
 
@@ -197,106 +211,183 @@ export class RbDropdown extends FormControl(RbBase()) {
 		}
 
 		const nextLi = focusedLi.nextElementSibling
-		if(!nextLi) return;
+		if (!nextLi) return;
 		nextLi.focus();
 	}
 
 	_focusPrevious(evt) {
 		let focusedLi = evt.composedPath()[0];
 		const liToSetFocus = focusedLi.previousElementSibling
-		if(!liToSetFocus) return;
+		if (!liToSetFocus) return;
 		liToSetFocus.focus();
 	}
 
-
-	_preSearch(key) {
-		return new Promise((resolve, reject) => {
-			if (this.searchString === undefined)
-				this.searchString = '';
-
-			this.searchString += key;
-
-			if(this.timeout)
-				return resolve(false);
-
-			this.timeout = setTimeout(() => {
-				this._doSearch(this.searchString)
-				resolve(true);
-			}, 500);
-		});
+	_hasRepeatedLetters(str) {
+		const patt = /^([a-z])\1+$/i;
+		str = str.slice(0, 2)
+		return patt.test(str);
 	}
 
-	_doSearch(searchString) {
-		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
-		let _data = [];
-		let indexOfMatchedItem = undefined;
-		if(!!this.labelKey) _data = this._getDataForLabelKey();
-		if(!this.labelKey && (typeof this.data[0] == 'object')) {
-			_data = this._stringifyDataObject()
-			regex = new RegExp(searchString, 'i'); //match string and ignore case
-		}
-		if(!this.labelKey && (typeof this.data[0] == 'string')) _data = this.data
+	_preSearch(evt) {
+		if (this.searchString === undefined)
+			this.searchString = '';
 
-		const match = _data.find((item, index) =>{
-			if (regex.test(item)) return indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+		this.searchString += evt.key;
+
+		this._doSearch(this.searchString, evt)
+		clearTimeout(this.timeout)
+
+
+		this.timeout = setTimeout(() => {
+			this._postSearch(true)
+		}, 450);
+
+	}
+
+	_searchByOneLetter(char, evt) {
+		let regex = new RegExp('^' + char, 'i'); //match string from the beginning and ignore case
+		const matchedItem = !!this.value ? this._getMatchOfValueFromData(this.value) : undefined;
+		const nextElementMatch = !!matchedItem ? {index: matchedItem.index + 1, item: this.data[matchedItem.index + 1]} : undefined;
+		const nextElementMatchLabel = !!nextElementMatch && Type.is.object(nextElementMatch.item) ?
+			(!!this.labelKey ? nextElementMatch.item[this.labelKey] :
+				!!this.valueKey ? nextElementMatch.item[this.valueKey]:
+					!!nextElementMatch ? nextElementMatch.item : undefined) : (!nextElementMatch ? undefined : nextElementMatch.item)
+		let indexOfMatchedItem = undefined;
+
+		if (!this.state.showDropdown){ // closed dropdown
+			if (!regex.test(nextElementMatchLabel))	{ // go to beginning if next item didn't match char
+				const match = this._searchData.find((item, index) =>{
+					indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+					return regex.test(item)
+				})
+
+				if(!match) return;
+				return this.setValue(this.data[indexOfMatchedItem])
+			}
+			return this.setValue(this.data[nextElementMatch.index])
+		}
+
+		// set Next element active
+		let focusedLi = evt.composedPath()[0];
+		const nextLi = focusedLi.nextElementSibling
+
+		if (!nextLi || !regex.test(nextLi.innerText.trim()))	{ // go to beginning if next item didn't match char
+			const match = this._searchData.find((item, index) =>{
+				indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+				return regex.test(item)
+			})
+			const linkForValue= this._findLinkBasedOnValue(match);
+			if (!!linkForValue)
+				return linkForValue.focus()
+
+			return
+		}
+		nextLi.focus();
+	}
+
+	_doSearch(searchString, evt) {
+		let regex = new RegExp('^' + searchString, 'i'); //match string from the beginning and ignore case
+		let indexOfMatchedItem = undefined;
+		if ((!this.labelKey && !this.valueKey) && Type.is.object(this.data[0]))
+			regex = new RegExp(searchString, 'i'); //match string and ignore case
+
+		const _label = Type.is.object(this.value) ? (!!this.labelKey ? this.value[this.labelKey]
+																	: (!!this.valueKey ? this.value[this.valueKey] : this.value)) : this.value;
+		if (this._hasRepeatedLetters(this.searchString) ||
+				(Type.is.string(_label) &&
+					(this.searchString.length == 1 && _label.charAt(0).toLowerCase() === this.searchString.charAt(0).toLowerCase()
+			)))
+			return this._searchByOneLetter(this.searchString.charAt(searchString.length-1), evt);
+
+		const match = this._searchData.find((item, index) =>{
+			indexOfMatchedItem = index //we need index to preselect when dropdown is not open.
+			return regex.test(item)
 		})
+
 		if (!match) return;
 
-		if(!this.state.showDropdown)
+		if (!this.state.showDropdown)
 			return this.setValue(this.data[indexOfMatchedItem])
 
 		let linkToFocus = this._findLinkBasedOnValue(match);
+		if(!linkToFocus) return;
 		linkToFocus.focus();
 		this._scrollToFocused(linkToFocus);
 	}
 
 	_postSearch(clear) {
-		if(!clear) return
+		if (!clear) return
 		clearTimeout(this.timeout);
 		this.timeout = null;
 		this.searchString = '';
 	}
 
-	_getDataForLabelKey() {
+	_getDataForKey(key) {
 		const _data = [];
 		for (const item of this.data)
-			_data.push(item[this.labelKey]);
+			_data.push(item[key]);
 		return _data;
 	}
 
-	_stringifyDataObject() {
+	_getSearchData(key=this._searchKey) {
 		const _data = [];
-		for (const item of this.data)
-			_data.push(JSON.stringify(item));
-		return _data;
+		if (!this.data) return undefined;
+		const dataIsObject = Type.is.object(this.data[0])
+
+		if (!!key && dataIsObject) {
+			for (const item of this.data)
+				_data.push(item[key]);
+			return _data;
+		}
+		if (dataIsObject) {
+			for (const item of this.data)
+				_data.push(JSON.stringify(item));
+			return _data;
+		}
+
+		return this.data;
 	}
 
 	_indexIsOutOfDataRange(index){
 		return !(index in this.data)
 	}
+
+	_updatePopoverSlot() {
+		if (this.state.slots.popover) return;
+		this.rb.elms.rbInput.state.slots.popover = false;
+		this.rb.elms.rbInput.triggerUpdate();
+	}
+
 	/* Observer
 	 ***********/
 	updating(prevProps) { // :void
-		if (prevProps.value === this.value) return;
-		this.rb.events.emit(this, 'value-changed', {
-			detail: { value: this.value }
-		});
+		if (this.dataChanged(prevProps.data)) this._searchData = null;
+		if (prevProps._key !== this._key) this._key = null;
+		if (prevProps._searchKey !== this._searchKey) this._searchKey = null;
+
+		this._setInitialKeysAndData()
+		if (!!prevProps.data && !this.dataChanged(prevProps.data)) { // if data updated we need update necessary itmes from viewReady
+			this.rb.elms.links = this.shadowRoot.querySelectorAll('li');
+		}
+
+		if (this.valueChanged(prevProps.value))
+			this.rb.events.emit(this, 'value-changed', {detail: { value: this.value }});
 	}
 
 	/* Event Handlers
 	 *****************/
 	_onkeydown(value, evt) { // :void
 		if (evt === undefined) evt = value; //when nothing is selected evt gets populated in value.
-		evt.preventDefault();
 		let keyAction = this.getKeyAction(evt)
-		if (keyAction.search) return this._preSearch(evt.key).then((clear) => {
-			this._postSearch(clear)
-		});
+		if (keyAction.tab && !this.state.showDropdown) return; //do not prevent when tabbing between elements
+		evt.preventDefault();
+		this._setRbInputActiveStatus(true)
+		if (keyAction.search) return this._preSearch(evt)
 		if (keyAction.down && !this.state.showDropdown) return this._selectNext(evt);
 		if (keyAction.down && this.state.showDropdown) return this._focusNext(evt);
 		if (keyAction.up && !this.state.showDropdown) return this._selectPrevious(evt);
 		if (keyAction.up && this.state.showDropdown) return this._focusPrevious(evt);
-		if (keyAction.escape) return this._closeDropdown();
+		if (keyAction.close) return this._closeDropdown();
 		if (keyAction.toggle) return this._ontoggle(value, evt);
 
 	}
@@ -314,8 +405,10 @@ export class RbDropdown extends FormControl(RbBase()) {
 
 	_toggleDropdown(evt) { // :void
 		this.state.showDropdown = !this.state.showDropdown;
+		this._positionMenu()
 		this.triggerUpdate();
 		this._scrollToActive(true);
+		if (this.state.showDropdown) this._setRbInputActiveStatus(true)
 	}
 
 	_closeDropdown(evt) { // :void
@@ -323,9 +416,45 @@ export class RbDropdown extends FormControl(RbBase()) {
 		this.triggerUpdate();
 	}
 
+	_positionMenu() {
+		if (!this.state.showDropdown) return;
+		const { label, list, menu, rbInput, trigger } = this.rb.elms;
+
+		const labelStyle = label.currentStyle || window.getComputedStyle(label);
+		const listLiStyle = window.getComputedStyle(this.rb.elms.links[0])
+		const allLiHeight = (parseInt(listLiStyle.lineHeight) + 2 * parseInt(listLiStyle.paddingTop)) * this.rb.elms.links.length
+		const inputHeightWithOutSubtext = label.offsetHeight + trigger.offsetHeight + parseInt(labelStyle.marginBottom);
+		menu.style.top = (inputHeightWithOutSubtext - rbInput.offsetHeight) + 'px'
+		const rbInputViewPortPos = rbInput.getBoundingClientRect();
+		const spaceBelowInput = window.innerHeight - rbInputViewPortPos.top;
+
+
+		if (spaceBelowInput < rbInputViewPortPos.top) { // display menu on top
+			const height = (rbInputViewPortPos.top - inputHeightWithOutSubtext - 5);
+			menu.style.top = (height > allLiHeight) ? `${0 - rbInputViewPortPos.top + (height - allLiHeight)}px` : `${0 - rbInputViewPortPos.top}px`;
+
+			list.style.height = (height > allLiHeight) ? `${allLiHeight}px` : `${height}px`;
+			return;
+		}
+		list.style.height = ((spaceBelowInput - 100) > allLiHeight) ? `${allLiHeight}px` : `${spaceBelowInput - 100}px`;
+	}
+
+	_setActive(item) {
+		if (!this.value) return undefined;
+		let match = this._getMatchOfValueFromData(this.value);
+		if (JSON.stringify(match.item) === JSON.stringify(item)){
+			this.activeItem = item
+			return true;
+		}
+	}
+
 	_findLinkBasedOnValue(value) {
+		const regex = new RegExp('^' + value, 'i'); //match string from the beginning and ignore case
 		const linkArr = [...this.rb.elms.links]; //converts nodeList to an array
-		const matchedLink = linkArr.find(link => link.innerText.indexOf(value) > -1);
+		const matchedLink = linkArr.find((item) =>{
+			return (regex.test(item.innerText))
+		})
+
 		return matchedLink;
 	}
 
@@ -345,6 +474,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 			this.rb.elms.list.scrollTop = focusedLi.offsetTop; // (scroll past top border)
 		})
 	}
+
 	_windowClickToggle(evt) { // :void
 		if (!this.state.showDropdown) return;
 		const path = evt.composedPath();
@@ -353,6 +483,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		if (path.includes(this.rb.elms.label)) return;
 		if (path.includes(this.rb.elms.trigger)) return;
 		this._toggleDropdown(evt);
+		this.rb.elms.input.blur();
 	}
 
 	/* Template
