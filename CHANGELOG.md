@@ -14,7 +14,7 @@
 
 ### Dependencies
 
-* **bump deps:** ([d40ea01](https://github.com/rapid-build-ui/rb-input/commit/d40ea01))
+* **bump deps:** ([d40ea01](https://github.com/rapid-build-ui/rb-dropdown/commit/d40ea01))
 	* **form-control** to v0.0.9
 	* **rb-base** to v0.0.10
 	* **rb-input** to v0.0.16
