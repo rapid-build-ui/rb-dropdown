@@ -1,3 +1,12 @@
+## [0.0.5](https://github.com/rapid-build-ui/rb-dropdown/compare/v0.0.4...v0.0.5) (2019-07-12)
+
+
+### Dependencies
+
+* **bump:** dep base v0.0.11
+
+
+
 ## [0.0.4](https://github.com/rapid-build-ui/rb-dropdown/compare/v0.0.3...v0.0.4) (2019-07-05)
 
 

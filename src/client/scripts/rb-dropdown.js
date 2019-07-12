@@ -13,7 +13,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 	 ************/
 	constructor() {
 		super();
-		this.version = '0.0.4';
+		this.version = '0.0.5';
 		this.state = {
 			...super.state,
 			showDropdown: false
