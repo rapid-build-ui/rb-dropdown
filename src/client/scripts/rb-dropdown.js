@@ -1,9 +1,9 @@
 /**************
  * RB-DROPDOWN
  **************/
-import { RbBase, props, html } from '../../rb-base/scripts/rb-base.js';
+import { RbBase, props, html } from '../../base/scripts/base.js';
 import FormControl             from '../../form-control/scripts/form-control.js';
-import Type                    from '../../rb-base/scripts/public/services/type.js';
+import Type                    from '../../base/scripts/public/services/type.js';
 import template                from '../views/rb-dropdown.html';
 import '../../rb-input/scripts/rb-input.js';
 import '../../rb-popover/scripts/rb-popover.js';
@@ -45,7 +45,7 @@ export class RbDropdown extends FormControl(RbBase()) {
 		});
 		this._setInitialKeysAndData()
 		this._setInputToReadonly();
-		this._initSlotStates(); // see rb-base: private/mixins/slot.js
+		this._initSlotStates(); // see base: private/mixins/slot.js
 		this._updatePopoverSlot();
 	}
 
